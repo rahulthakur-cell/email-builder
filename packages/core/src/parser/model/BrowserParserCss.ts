@@ -66,25 +66,28 @@ export const parseSelector = (str = '') => {
   const result: string[][] = [];
   const sels = str.split(',');
 
-  for (var i = 0, len = sels.length; i < len; i++) {
-    var sel = sels[i].trim();
+  // Will accept only concatenated classes and last
+  // class might be with state (eg. :hover) complex state (:hover:not(.active))
+  // as long as the state does not contain commas.
+  // Can also accept SINGLE ID selectors, eg. `#myid`, `#myid:hover`
+  // Composed are not valid: `#myid.some-class`, `#myid.some-class:hover
 
-    // Will accept only concatenated classes and last
-    // class might be with state (eg. :hover), nothing else.
-    // Can also accept SINGLE ID selectors, eg. `#myid`, `#myid:hover`
-    // Composed are not valid: `#myid.some-class`, `#myid.some-class:hover`
-    if (/^(\.{1}[\w\-]+)+(:{1,2}[\w\-()]+)?$/gi.test(sel) || /^(#{1}[\w\-]+){1}(:{1,2}[\w\-()]+)?$/gi.test(sel)) {
-      var cls = sel.split('.').filter(Boolean);
-      result.push(cls);
+  const checkForClass = /^(\.[\w\-]+)+((:{1,2}[\w\-]+)(\([^)]*\))?)*$/;
+
+  const checkForId = /^#[\w\-]+((:{1,2}[\w\-]+)(\([^)]*\))?)*$/;
+
+  for (let i = 0; i < sels.length; i++) {
+    const sel = sels[i].trim();
+
+    if (checkForClass.test(sel) || checkForId.test(sel)) {
+      const parts = sel.split(/\.(?![^()]*\))/).filter(Boolean);
+      result.push(parts);
     } else {
       add.push(sel);
     }
   }
 
-  return {
-    result,
-    add,
-  };
+  return { result, add };
 };
 
 /**
