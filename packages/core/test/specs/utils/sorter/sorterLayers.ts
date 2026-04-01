@@ -62,7 +62,7 @@ describe('Layers sorter', () => {
     sorter.startSort([{ element: sourceLayer }]);
     sorter.dropLocationDeterminer.lastMoveData = {
       targetNode: new LayersComponentNode(wrapper),
-      index: 1,
+      index: 2,
     };
 
     sorter.endDrag();
