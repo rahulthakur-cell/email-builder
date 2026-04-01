@@ -32,7 +32,7 @@ describe('Layers sorter', () => {
     editor.destroy();
   });
 
-  test('removes the wrong hidden sibling when sorting layers with hidden siblings in the same collection', () => {
+  test('moves the hidden source after the target without removing other hidden siblings', () => {
     editor.setComponents(`
       <div id="hidden-a" style="display: none;"></div>
       <div id="visible-a">Visible A</div>
@@ -67,8 +67,6 @@ describe('Layers sorter', () => {
 
     sorter.endDrag();
 
-    expect(getChildIds(wrapper)).toEqual(['hidden-a', 'visible-a', 'visible-b']);
-    expect(getChildIds(wrapper)).not.toContain('hidden-b');
-    expect(getChildIds(wrapper).indexOf('hidden-a')).toBe(0);
+    expect(getChildIds(wrapper)).toEqual(['visible-a', 'hidden-a', 'visible-b', 'hidden-b']);
   });
 });
