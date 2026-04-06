@@ -159,5 +159,12 @@ export type {
   DataConditionProps,
   ExpressionProps,
 } from './data_sources/model/conditional_variables/DataCondition';
+export type {
+  DataBindingImportAction,
+  DataBindingImportContext,
+  DataBindingImportPolicy,
+  DataBindingImportSource,
+  DataBindingKind,
+} from './data_sources/types';
 
 export default grapesjs;
