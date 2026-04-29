@@ -160,12 +160,18 @@ export default class ItemsView extends View {
   }
 
   render() {
-    const { el, module } = this;
+    const { el, module, opt } = this;
     const frag = document.createDocumentFragment();
     el.innerHTML = '';
+    const addedModels = new Set();
+
     this.collection
       .map((cmp) => module.__getLayerFromComponent(cmp))
-      .forEach((model) => this.addToCollection(model, frag));
+      .forEach((model) => {
+        if (!model || model === opt.parent || addedModels.has(model)) return;
+        addedModels.add(model);
+        this.addToCollection(model, frag);
+      });
     el.appendChild(frag);
     el.className = this.className!;
     return this;
