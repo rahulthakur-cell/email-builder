@@ -1,56 +1,32 @@
 (function (global) {
-  // Themed icon system — each block gets a color-coded icon matching its use case
-  const blockLabel = (shortName, title, copy) => {
-    const iconMap = {
-      // --- Email Sections (rich, warm palette) ---
-      HD:  { color: '#3b82f6', bg: '#eff6ff', d: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>' },
-      HR:  { color: '#8b5cf6', bg: '#f5f3ff', d: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>' },
-      FG:  { color: '#ec4899', bg: '#fdf2f8', d: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>' },
-      PG:  { color: '#f97316', bg: '#fff7ed', d: '<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>' },
-      PC:  { color: '#0ea5e9', bg: '#f0f9ff', d: '<rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><circle cx="12" cy="15" r="2"/>' },
-      CR:  { color: '#6366f1', bg: '#eef2ff', d: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>' },
-      TS:  { color: '#14b8a6', bg: '#f0fdfa', d: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="12" y2="13"/>' },
-      FQ:  { color: '#f59e0b', bg: '#fffbeb', d: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>' },
-      CT:  { color: '#ef4444', bg: '#fef2f2', d: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>' },
-      FT:  { color: '#64748b', bg: '#f8fafc', d: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="8" y1="19" x2="8.01" y2="19"/><line x1="12" y1="19" x2="12.01" y2="19"/><line x1="16" y1="19" x2="16.01" y2="19"/>' },
-
-      // --- Content Elements (cool, modern palette) ---
-      TXT: { color: '#8b5cf6', bg: '#f5f3ff', d: '<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>' },
-      LNK: { color: '#3b82f6', bg: '#eff6ff', d: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>' },
-      IMG: { color: '#f97316', bg: '#fff7ed', d: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>' },
-      SP:  { color: '#94a3b8', bg: '#f1f5f9', d: '<line x1="12" y1="5" x2="12" y2="19"/><polyline points="8 8 12 5 16 8"/><polyline points="8 16 12 19 16 16"/>' },
-      BTN: { color: '#6366f1', bg: '#eef2ff', d: '<rect x="3" y="7" width="18" height="10" rx="3" ry="3"/><line x1="8" y1="12" x2="16" y2="12"/>' },
-      DIV: { color: '#a8a29e', bg: '#fafaf9', d: '<line x1="4" y1="12" x2="20" y2="12"/>' },
-      LST: { color: '#14b8a6', bg: '#f0fdfa', d: '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/>' },
-
-      // --- Layout Sections (structural, neutral) ---
-      S1:  { color: '#64748b', bg: '#f1f5f9', d: '<rect x="4" y="4" width="16" height="16" rx="2" ry="2"/>' },
-      S3:  { color: '#64748b', bg: '#f1f5f9', d: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>' },
-
-      // --- Social & Special ---
-      SOC: { color: '#ec4899', bg: '#fdf2f8', d: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>' },
-
-      // --- Merge Tags (data/variable tones) ---
-      NM:  { color: '#f59e0b', bg: '#fffbeb', d: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>' },
-      EM:  { color: '#06b6d4', bg: '#ecfeff', d: '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>' },
-      UN:  { color: '#64748b', bg: '#f8fafc', d: '<path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/>' },
-    };
-
-    const icon = iconMap[shortName] || { color: '#64748b', bg: '#f1f5f9', d: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>' };
-
-    return `
-      <div style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;background:${icon.bg};color:${icon.color};border-radius:10px;flex-shrink:0;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;">
-          ${icon.d}
-        </svg>
+  const blockLabel = (shortName, title, copy) => `
+    <div style="display:grid; gap:9px; text-align:left;">
+      <div
+        style="
+          width:44px;
+          height:44px;
+          border-radius:14px;
+          border:1px solid #e7e5e4;
+          background:linear-gradient(180deg, #ffffff 0%, #f5f5f4 100%);
+          display:grid;
+          place-items:center;
+          box-shadow:0 10px 24px rgba(15, 23, 42, 0.07);
+          color:#111827;
+          font-size:12px;
+          font-weight:700;
+          letter-spacing:0.08em;
+        "
+      >
+        ${shortName}
       </div>
-      <div style="font-size:11px;font-weight:600;color:#334155;text-align:center;line-height:1.3;margin-top:2px;">${title}</div>
-    `;
-  };
+      <div style="font-size:13px; font-weight:600; color:#111827;">${title}</div>
+      <div style="font-size:11px; line-height:1.45; color:#78716c;">${copy}</div>
+    </div>
+  `;
 
   const tonePalette = {
     'tone-oat': { background: '#f8f7f4', accent: '#efece6' },
-    'tone-stone': { background: '#f5f5f4', accent: '#ece7de' },
+    'tone-stoyne': { background: '#f5f5f4', accent: '#ece7de' },
     'tone-sage': { background: '#eef6f0', accent: '#d8ead9' },
   };
 
@@ -318,7 +294,7 @@
         wrapper.className = 'sb-trait-dynamic-list';
         wrapper.innerHTML = `
           <div class="sb-dynamic-list-items"></div>
-          <button class="sb-dynamic-list-add" type="button" style="width: 100%; padding: 7px 10px; margin-top: 6px; border-radius: 6px; border: 1px dashed rgba(0,0,0,0.12); background: transparent; cursor: pointer; font-size: 12px; font-family: inherit; color: #6b7280; transition: all 0.12s ease;" onmouseover="this.style.borderColor='#6366f1';this.style.color='#6366f1'" onmouseout="this.style.borderColor='rgba(0,0,0,0.12)';this.style.color='#6b7280'">+ Add Item</button>
+          <button class="sb-dynamic-list-add" type="button" style="width: 100%; padding: 8px; margin-top: 10px; border-radius: 6px; border: 1px dashed #ccc; background: transparent; cursor: pointer;">+ Add Item</button>
         `;
 
         const list = wrapper.querySelector('.sb-dynamic-list-items');
@@ -342,14 +318,17 @@
           const items = getItems();
           items.forEach((item, index) => {
             const itemEl = document.createElement('div');
-            itemEl.style.cssText = 'margin-bottom:8px; padding:10px 12px; border:1px solid rgba(0,0,0,0.07); border-radius:8px; background:#fafbfc;';
+            itemEl.style.marginBottom = '10px';
+            itemEl.style.padding = '10px';
+            itemEl.style.border = '1px solid #eee';
+            itemEl.style.borderRadius = '6px';
             itemEl.innerHTML = `
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <span style="font-size:10px; font-weight:600; color:#9ca3af; text-transform:uppercase; letter-spacing:0.04em;">Item ${index + 1}</span>
-                <button type="button" data-index="${index}" class="sb-dynamic-list-remove" style="width:22px; height:22px; display:flex; align-items:center; justify-content:center; color:#ef4444; background:none; border:1px solid transparent; border-radius:4px; cursor:pointer; font-size:14px; line-height:1; transition:all 0.12s ease;" onmouseover="this.style.background='rgba(239,68,68,0.08)';this.style.borderColor='rgba(239,68,68,0.15)'" onmouseout="this.style.background='none';this.style.borderColor='transparent'">&times;</button>
+              <div style="display:flex; justify-content:space-between; margin-bottom: 5px;">
+                <label style="font-size: 11px; font-weight: bold; color: #555;">Item ${index + 1}</label>
+                <button type="button" data-index="${index}" class="sb-dynamic-list-remove" style="color:red; background:none; border:none; cursor:pointer;">&times;</button>
               </div>
-              <input type="text" data-index="${index}" data-key="label" value="${item.label || ''}" placeholder="Label" style="width:100%; box-sizing:border-box; margin-bottom:6px; border-radius:6px; border:1px solid rgba(0,0,0,0.1); padding:7px 10px; font-size:12px; font-family:inherit; color:#111827; background:#fff; outline:none; transition:border-color 0.12s ease;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='rgba(0,0,0,0.1)'">
-              <input type="text" data-index="${index}" data-key="url" value="${item.url || ''}" placeholder="URL (e.g. https://...)" style="width:100%; box-sizing:border-box; border-radius:6px; border:1px solid rgba(0,0,0,0.1); padding:7px 10px; font-size:12px; font-family:inherit; color:#111827; background:#fff; outline:none; transition:border-color 0.12s ease;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='rgba(0,0,0,0.1)'">
+              <input type="text" data-index="${index}" data-key="label" value="${item.label || ''}" placeholder="Label" style="width:100%; box-sizing:border-box; margin-bottom:6px; border-radius:4px; border:1px solid #ccc; padding:6px; font-size:12px;">
+              <input type="text" data-index="${index}" data-key="url" value="${item.url || ''}" placeholder="URL" style="width:100%; box-sizing:border-box; border-radius:4px; border:1px solid #ccc; padding:6px; font-size:12px;">
             `;
             list.appendChild(itemEl);
           });
@@ -408,7 +387,7 @@
             <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
               <tr>
                 ${model.get('brandInitials')
-        ? `
+                  ? `
                     <td valign="top" style="width:52px; padding-right:14px;">
                       <table role="presentation" width="44" border="0" cellpadding="0" cellspacing="0" style="background:#111827; border-radius:14px;">
                         <tr>
@@ -419,7 +398,7 @@
                       </table>
                     </td>
                   `
-        : ''}
+                  : ''}
                 <td valign="middle" align="left">
                   ${model.get('brandName') ? `<strong style="display:block; font-size:20px; line-height:1.2; color:#111827;">${model.get('brandName')}</strong>` : ''}
                   ${model.get('brandTagline') ? `<span style="display:block; margin-top:6px; font-size:13px; line-height:1.6; color:#57534e;">${model.get('brandTagline')}</span>` : ''}
@@ -429,7 +408,7 @@
           </td>
         </tr>
         ${navItems.length
-        ? `
+          ? `
             <tr>
               <td align="center" style="padding:0 20px 18px; border-top:1px solid #ece8e1; border-bottom:1px solid #ece8e1;">
                 <div style="padding:13px 0 12px;">
@@ -438,9 +417,9 @@
               </td>
             </tr>
           `
-        : ''}
+          : ''}
         ${actions
-        ? `
+          ? `
             <tr>
               <td style="padding:20px 20px 24px;">
                 <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center">
@@ -449,7 +428,7 @@
               </td>
             </tr>
           `
-        : ''}
+          : ''}
       </table>
     `.trim();
   };
@@ -474,12 +453,12 @@
             <h1 style="margin:18px 0 16px; font-size:36px; line-height:1.2; color:#111827;">${model.get('heroTitle')}</h1>
             <p style="margin:0 auto 28px; max-width:480px; font-size:16px; line-height:1.7; color:#57534e;">${model.get('heroText')}</p>
             ${heroButtons
-        ? `
+              ? `
                 <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center">
                   <tr>${heroButtons}</tr>
                 </table>
               `
-        : ''}
+              : ''}
             <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-top:32px; background:#f8f7f4; border:1px solid #ece8e1; border-radius:14px;">
               <tr>
                 <td class="responsive-td" width="33.33%" align="center" style="padding:18px 12px;">
@@ -569,8 +548,8 @@
           </td>
         </tr>
         ${slides
-        .map(
-          (slide, index) => `
+          .map(
+            (slide, index) => `
               <tr>
                 <td style="padding:0 20px ${index === slides.length - 1 ? '40px' : '18px'};">
                   <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="background:#fafaf9; border:1px solid #ece8e1; border-radius:16px;">
@@ -586,8 +565,8 @@
                 </td>
               </tr>
             `,
-        )
-        .join('')}
+          )
+          .join('')}
       </table>
     `.trim();
   };
@@ -609,8 +588,8 @@
             <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
               <tr>
                 ${features
-        .map(
-          (feature) => `
+                  .map(
+                    (feature) => `
                       <td class="responsive-td" width="33.33%" valign="top" style="padding:10px; text-align:center;">
                         <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" width="40" style="margin:0 auto 12px; background:#111827; border-radius:999px;">
                           <tr>
@@ -621,8 +600,8 @@
                         <p style="margin:10px 0 0; font-size:14px; line-height:1.7; color:#57534e;">${feature.text}</p>
                       </td>
                     `,
-        )
-        .join('')}
+                  )
+                  .join('')}
               </tr>
             </table>
           </td>
@@ -648,8 +627,8 @@
             <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
               <tr>
                 ${quotes
-        .map(
-          (quote) => `
+                  .map(
+                    (quote) => `
                       <td class="responsive-td" width="33.33%" valign="top" style="padding:10px;">
                         <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="height:100%; background:#fafaf9; border:1px solid #ece8e1; border-radius:16px;">
                           <tr>
@@ -662,8 +641,8 @@
                         </table>
                       </td>
                     `,
-        )
-        .join('')}
+                  )
+                  .join('')}
               </tr>
             </table>
           </td>
@@ -690,8 +669,8 @@
             </div>
             <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
               ${answers
-        .map(
-          (item) => `
+                .map(
+                  (item) => `
                     <tr>
                       <td style="padding:0 0 16px;">
                         <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="background:#fafaf9; border:1px solid #ece8e1; border-radius:14px;">
@@ -705,8 +684,8 @@
                       </td>
                     </tr>
                   `,
-        )
-        .join('')}
+                )
+                .join('')}
             </table>
           </td>
         </tr>
@@ -734,12 +713,12 @@
             <h2 style="margin:18px 0 14px; font-size:28px; line-height:1.25; color:#ffffff;">${model.get('ctaTitle')}</h2>
             <p style="margin:0 auto 28px; max-width:460px; font-size:16px; line-height:1.7; color:#e7e5e4;">${model.get('ctaText')}</p>
             ${buttons
-        ? `
+              ? `
                 <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center">
                   <tr>${buttons}</tr>
                 </table>
               `
-        : ''}
+              : ''}
           </td>
         </tr>
       </table>
@@ -771,7 +750,7 @@
             <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
               <tr>
                 ${model.get('footerInitials')
-        ? `
+                  ? `
                     <td valign="top" style="width:52px; padding-right:14px;">
                       <table role="presentation" width="44" border="0" cellpadding="0" cellspacing="0" style="background:#111827; border-radius:14px;">
                         <tr>
@@ -782,7 +761,7 @@
                       </table>
                     </td>
                   `
-        : ''}
+                  : ''}
                 <td valign="top" align="left">
                   ${model.get('footerBrand') ? `<strong style="display:block; font-size:20px; line-height:1.2; color:#111827;">${model.get('footerBrand')}</strong>` : ''}
                   ${model.get('footerTagline') ? `<span style="display:block; margin-top:6px; font-size:13px; line-height:1.6; color:#57534e;">${model.get('footerTagline')}</span>` : ''}
@@ -811,14 +790,14 @@
                 <td class="responsive-td" width="33.33%" valign="top" style="padding:0 0 14px 10px;">
                   ${model.get('col3Title') ? `<strong style="display:block; margin-bottom:12px; font-size:12px; line-height:1.5; color:#111827; letter-spacing:0.08em; text-transform:uppercase;">${model.get('col3Title')}</strong>` : ''}
                   ${col3Lines
-        .map(
-          (line) => `
+                    .map(
+                      (line) => `
                         <span style="display:block; margin-bottom:8px; font-size:13px; line-height:1.6; color:#57534e;">
                           ${line}
                         </span>
                       `,
-        )
-        .join('')}
+                    )
+                    .join('')}
                 </td>
               </tr>
             </table>
@@ -851,8 +830,8 @@
           <td style="padding:28px 20px;">
             <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
               ${listItems
-        .map(
-          (item) => `
+                .map(
+                  (item) => `
                     <tr>
                       <td valign="top" style="width:18px; padding:0 10px 12px 0; font-size:16px; line-height:1.6; color:#0f766e;">&bull;</td>
                       <td valign="top" style="padding:0 0 12px; font-size:15px; line-height:1.7; color:#334155;">
@@ -860,12 +839,12 @@
                       </td>
                     </tr>
                   `,
-        )
-        .join('')}
+                )
+                .join('')}
             </table>
             ${model.get('listCta')
-        ? `<div style="padding-top:10px;">${renderButton(model.get('listCta'), model.get('listCtaLink'), { align: 'left', compact: true })}</div>`
-        : ''}
+              ? `<div style="padding-top:10px;">${renderButton(model.get('listCta'), model.get('listCtaLink'), { align: 'left', compact: true })}</div>`
+              : ''}
           </td>
         </tr>
       </table>
@@ -1956,13 +1935,13 @@
           <tr>
             <td align="center" style="padding:12px 0;">
               ${renderInlineLinks(
-        [
-          { label: 'Instagram', url: '#' },
-          { label: 'LinkedIn', url: '#' },
-          { label: 'X', url: '#' },
-        ],
-        { color: '#0f766e', fontSize: '13px', fontWeight: '700' },
-      )}
+                [
+                  { label: 'Instagram', url: '#' },
+                  { label: 'LinkedIn', url: '#' },
+                  { label: 'X', url: '#' },
+                ],
+                { color: '#0f766e', fontSize: '13px', fontWeight: '700' },
+              )}
             </td>
           </tr>
         </table>
@@ -1970,6 +1949,8 @@
     });
 
     const emailCategory = { id: 'email', label: 'Merge Tags', open: true };
+Tags', open: true };
+Tags', open: true };
 
     blocks.add('tag-name', {
       label: blockLabel('NM', 'Name', 'Insert {{name}} variable'),

@@ -1,0 +1,901 @@
+﻿<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>GrapesJS Minimal Builder</title>
+  <link rel="stylesheet" href="dist/css/grapes.min.css" />
+  <script src="grapes.min.js"></script>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      --gjs-main-color: #ffffff;
+      --gjs-primary-color: #ffffff;
+      --gjs-secondary-color: #111827;
+      --gjs-tertiary-color: #e7e5e4;
+      --gjs-quaternary-color: #0f172a;
+      --gjs-font-color: #334155;
+      --gjs-font-color-active: #111827;
+      --gjs-main-dark-color: rgba(15, 23, 42, 0.08);
+      --gjs-secondary-dark-color: rgba(15, 23, 42, 0.04);
+      --gjs-main-light-color: rgba(255, 255, 255, 0.85);
+      --gjs-secondary-light-color: rgba(15, 23, 42, 0.68);
+      --gjs-soft-light-color: rgba(148, 163, 184, 0.08);
+      --gjs-color-blue: #2563eb;
+      --gjs-color-red: #dc2626;
+      --gjs-color-yellow: #f59e0b;
+      --gjs-color-green: #10b981;
+      --gjs-color-highlight: #0f766e;
+      --gjs-color-warn: #f59e0b;
+      --gjs-light-border: rgba(15, 23, 42, 0.08);
+      --gjs-arrow-color: rgba(15, 23, 42, 0.45);
+      --gjs-dark-text-shadow: rgba(15, 23, 42, 0.08);
+      --gjs-main-font: 'Segoe UI', 'Helvetica Neue', sans-serif;
+      --gjs-font-size: 13px;
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.95), transparent 32%),
+        linear-gradient(180deg, #f8f7f4 0%, #f1efeb 100%);
+      color: #111827;
+      overflow: hidden;
+    }
+
+    .builder-shell {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      height: 100%;
+    }
+
+    .builder-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(18px);
+    }
+
+    .builder-topbar__brand {
+      display: grid;
+      gap: 2px;
+    }
+
+    .builder-topbar__brand strong {
+      font-size: 15px;
+      letter-spacing: 0.04em;
+    }
+
+    .builder-topbar__brand span,
+    .builder-topbar__hint {
+      color: #57534e;
+      font-size: 13px;
+    }
+
+    .builder-topbar__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .builder-button,
+    .builder-select {
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      background: #ffffff;
+      color: #111827;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .builder-button--primary {
+      background: #111827;
+      color: #ffffff;
+      border-color: #111827;
+    }
+
+    .builder-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      color: #57534e;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .builder-status::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #94a3b8;
+    }
+
+    .builder-status[data-state='saving']::before {
+      background: #f59e0b;
+    }
+
+    .builder-status[data-state='saved']::before {
+      background: #10b981;
+    }
+
+    .builder-status[data-state='error']::before {
+      background: #dc2626;
+    }
+
+    .builder-workspace {
+
+    .builder-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(15, 23, 42, 0.42);
+      z-index: 1000;
+    }
+
+    .builder-modal.open {
+      display: flex;
+    }
+
+    .builder-modal__content {
+      width: min(760px, 100%);
+      max-height: min(86vh, 920px);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+      border-radius: 28px;
+      background: #ffffff;
+      box-shadow: 0 32px 90px rgba(15, 23, 42, 0.24);
+    }
+
+    .builder-modal__content--wide {
+      width: min(980px, 100%);
+    }
+
+    .builder-modal__header,
+    .builder-modal__footer {
+      padding: 18px 20px;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .builder-modal__footer {
+      border-bottom: 0;
+      border-top: 1px solid rgba(15, 23, 42, 0.08);
+      flex-wrap: wrap;
+    }
+
+    .builder-modal__header h2 {
+      margin: 0;
+      font-size: 20px;
+      color: #111827;
+    }
+
+    .builder-modal__header p,
+    .builder-modal__hint {
+      margin: 6px 0 0;
+      color: #57534e;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .builder-modal__close {
+      width: 38px;
+      height: 38px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 999px;
+      background: #ffffff;
+      color: #111827;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .template-grid {
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      overflow: auto;
+    }
+
+    .template-card {
+      padding: 20px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 22px;
+      background: linear-gradient(180deg, #ffffff 0%, #faf8f5 100%);
+      cursor: pointer;
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+    }
+
+    .template-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(37, 99, 235, 0.24);
+      box-shadow: 0 22px 44px rgba(15, 23, 42, 0.08);
+    }
+
+    .template-card h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+      color: #111827;
+    }
+
+    .template-card p {
+      margin: 0;
+      color: #57534e;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .export-code {
+      width: 100%;
+      height: 100%;
+      padding: 20px;
+      border: 0;
+      resize: none;
+      font: 12px/1.65 Consolas, 'Courier New', monospace;
+      color: #0f172a;
+      background: #f8fafc;
+      box-sizing: border-box;
+    }
+
+    .builder-toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      min-width: 240px;
+      max-width: min(420px, calc(100vw - 44px));
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #111827;
+      color: #ffffff;
+      box-shadow: 0 20px 44px rgba(15, 23, 42, 0.26);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+      transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+      z-index: 1100;
+    }
+
+    .builder-toast.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .builder-workspace {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr) 360px;
+      min-height: 0;
+    }
+
+    .builder-sidebar,
+    .builder-canvas {
+      min-height: 0;
+    }
+
+    .builder-sidebar {
+      padding: 16px;
+      display: grid;
+      gap: 16px;
+      overflow: auto;
+    }
+
+    .builder-sidebar--left {
+      border-right: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .builder-sidebar--right {
+      border-left: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .builder-panel {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      min-height: 0;
+      border: 1px solid rgba(231, 229, 228, 0.95);
+      border-radius: 26px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 24px 56px rgba(15, 23, 42, 0.07);
+      overflow: hidden;
+    }
+
+    .builder-panel__header {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(250, 249, 247, 0.92));
+    }
+
+    .builder-panel__header strong {
+      display: block;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+    }
+
+    .builder-panel__header span {
+      display: block;
+      margin-top: 4px;
+      color: #78716c;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .builder-panel__content {
+      min-height: 0;
+      overflow: auto;
+    }
+
+    .builder-panel__content--fill {
+      display: grid;
+    }
+
+    .builder-canvas {
+      min-width: 0;
+      padding: 0;
+    }
+
+    .builder-canvas__frame {
+      height: 100%;
+      min-height: 0;
+      border-left: 1px solid rgba(231, 229, 228, 0.95);
+      border-right: 1px solid rgba(231, 229, 228, 0.95);
+      border-radius: 0;
+      background: rgba(255, 255, 255, 1);
+      overflow: hidden;
+    }
+
+    #gjs {
+      height: 100%;
+      width: 100%;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    .gjs-editor,
+    .gjs-one-bg,
+    .gjs-two-color,
+    .gjs-three-bg,
+    .gjs-four-color {
+      color: inherit;
+    }
+
+    .gjs-editor {
+      background: transparent;
+    }
+
+    .gjs-cv-canvas {
+      width: 100%;
+
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(248, 247, 244, 0.92)),
+        linear-gradient(135deg, rgba(203, 213, 225, 0.18), transparent 40%);
+    }
+
+    .gjs-blocks-c,
+    .gjs-sm-sectors,
+    .gjs-trt-traits,
+    .gjs-layers,
+    .gjs-clm-tags {
+      background: transparent;
+    }
+
+    .gjs-block-category,
+    .gjs-sm-sector,
+    .gjs-trt-trait,
+    .gjs-layer {
+      border-color: rgba(15, 23, 42, 0.08);
+    }
+
+    .gjs-block-category {
+      border-bottom: 1px solid rgba(15, 23, 42, 0.07);
+    }
+
+    .gjs-title,
+    .gjs-sm-sector-title,
+    .gjs-layer-title,
+    .gjs-trt-trait__label {
+      letter-spacing: 0.02em;
+    }
+
+    .gjs-block {
+      margin: 12px;
+      padding: 12px;
+      border: 1px solid rgba(15, 23, 42, 0.07);
+      border-radius: 20px;
+      background: linear-gradient(180deg, #ffffff 0%, #fbfaf8 100%);
+      box-shadow: 0 16px 32px rgba(15, 23, 42, 0.05);
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+    }
+
+    .gjs-block:hover {
+      transform: translateY(-2px);
+      border-color: rgba(37, 99, 235, 0.22);
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+    }
+
+    .gjs-field,
+    .gjs-input-holder input,
+    .gjs-input-holder select,
+    .gjs-input-holder textarea {
+      border-radius: 12px;
+    }
+
+    .gjs-sm-sectors .gjs-sm-sector,
+    .gjs-trt-traits .gjs-trt-trait,
+    .gjs-layer {
+      background: rgba(255, 255, 255, 0.66);
+    }
+
+    .sb-trait-asset {
+      display: grid;
+      gap: 10px;
+    }
+
+    .sb-trait-asset__row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .sb-trait-asset__input {
+      width: 100%;
+    }
+
+    .sb-trait-asset__button {
+      padding: 9px 12px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 12px;
+      background: #111827;
+      color: #ffffff;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .sb-trait-asset__preview {
+      min-height: 88px;
+      border: 1px dashed rgba(15, 23, 42, 0.16);
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 247, 244, 0.92));
+      color: #78716c;
+      font-size: 12px;
+    }
+
+    .sb-trait-asset__preview:empty::before {
+      content: attr(data-empty);
+    }
+
+    .sb-trait-asset__preview img {
+      display: block;
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+    }
+
+    .builder-note {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+      background: rgba(248, 247, 244, 0.9);
+      color: #57534e;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .builder-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(15, 23, 42, 0.42);
+      z-index: 1000;
+    }
+
+    .builder-modal.open {
+      display: flex;
+    }
+
+    .builder-modal__content {
+      width: min(760px, 100%);
+      max-height: min(86vh, 920px);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+      border-radius: 28px;
+      background: #ffffff;
+      box-shadow: 0 32px 90px rgba(15, 23, 42, 0.24);
+    }
+
+    .builder-modal__content--wide {
+      width: min(980px, 100%);
+    }
+
+    .builder-modal__header,
+    .builder-modal__footer {
+      padding: 18px 20px;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .builder-modal__footer {
+      border-bottom: 0;
+      border-top: 1px solid rgba(15, 23, 42, 0.08);
+      flex-wrap: wrap;
+    }
+
+    .builder-modal__header h2 {
+      margin: 0;
+      font-size: 20px;
+      color: #111827;
+    }
+
+    .builder-modal__header p,
+    .builder-modal__hint {
+      margin: 6px 0 0;
+      color: #57534e;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .builder-modal__close {
+      width: 38px;
+      height: 38px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 999px;
+      background: #ffffff;
+      color: #111827;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .template-grid {
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      overflow: auto;
+    }
+
+    .template-card {
+      padding: 20px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 22px;
+      background: linear-gradient(180deg, #ffffff 0%, #faf8f5 100%);
+      cursor: pointer;
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+    }
+
+    .template-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(37, 99, 235, 0.24);
+      box-shadow: 0 22px 44px rgba(15, 23, 42, 0.08);
+    }
+
+    .template-card h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+      color: #111827;
+    }
+
+    .template-card p {
+      margin: 0;
+      color: #57534e;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .export-code {
+      width: 100%;
+      height: 100%;
+      padding: 20px;
+      border: 0;
+      resize: none;
+      font: 12px/1.65 Consolas, 'Courier New', monospace;
+      color: #0f172a;
+      background: #f8fafc;
+      box-sizing: border-box;
+    }
+
+    .builder-toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      min-width: 240px;
+      max-width: min(420px, calc(100vw - 44px));
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #111827;
+      color: #ffffff;
+      box-shadow: 0 20px 44px rgba(15, 23, 42, 0.26);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+      transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+      z-index: 1100;
+    }
+
+    .builder-toast.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 1280px) {
+      .builder-workspace {
+        grid-template-columns: 280px minmax(0, 1fr) 320px;
+      }
+    }
+
+    @media (max-width: 1080px) {
+      .builder-workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .builder-sidebar--left,
+      .builder-sidebar--right {
+        border: 0;
+      }
+
+      .builder-sidebar--left {
+        order: 2;
+      }
+
+      .builder-canvas {
+        order: 1;
+        padding-bottom: 0;
+      }
+
+      .builder-sidebar--right {
+        order: 3;
+        padding-top: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- <div class="builder-shell">
+    <div class="builder-topbar">
+      <div class="builder-topbar__brand">
+        <strong>Minimal GrapesJS Builder</strong>
+        <span>Custom sections with fixed left and right editing panels</span>
+      </div>
+      <div class="builder-topbar__actions" style="display: flex; gap: 8px; align-items: center;">
+        <button id="btn-store"
+          style="padding: 6px 12px; border-radius: 6px; border: 1px solid #e7e5e4; background: white; cursor: pointer; font-size: 13px;">Store</button>
+        <select id="device-switcher"
+          style="padding: 6px; border-radius: 6px; border: 1px solid #e7e5e4; background: white; font-size: 13px;">
+          <option value="desktop">Desktop</option>
+          <option value="tablet">Tablet</option>
+          <option value="mobilePortrait">Mobile</option>
+        </select>
+        <button id="btn-undo"
+          style="padding: 6px 12px; border-radius: 6px; border: 1px solid #e7e5e4; background: white; cursor: pointer; font-size: 13px;">Undo</button>
+        <button id="btn-redo"
+          style="padding: 6px 12px; border-radius: 6px; border: 1px solid #e7e5e4; background: white; cursor: pointer; font-size: 13px;">Redo</button>
+        <button id="btn-clear"
+          style="padding: 6px 12px; border-radius: 6px; border: 1px solid #e7e5e4; background: white; cursor: pointer; font-size: 13px;">Clear</button>
+        <button id="btn-fullscreen"
+          style="padding: 6px 12px; border-radius: 6px; border: 1px solid #e7e5e4; background: white; cursor: pointer; font-size: 13px;">Full
+          Width</button>
+        <button id="btn-code"
+          style="padding: 6px 12px; border-radius: 6px; border: 1px solid #e7e5e4; background: white; cursor: pointer; font-size: 13px;">Code</button>
+        <button id="btn-save"
+          style="padding: 6px 16px; border-radius: 6px; border: none; background: #111827; color: white; font-weight: 600; cursor: pointer; font-size: 13px;">Save</button>
+      </div>
+    </div>
+
+    <div class="builder-workspace">
+      <aside class="builder-sidebar builder-sidebar--left">
+        <section class="builder-panel">
+          <div class="builder-panel__header">
+            <strong>Blocks</strong>
+            <span>Drag sections and components into the canvas.</span>
+          </div>
+          <div class="builder-panel__content" id="blocks"></div>
+        </section>
+
+        <section class="builder-panel">
+          <div class="builder-panel__header">
+            <strong>Layers</strong>
+            <span>Select parent sections easily when you need to edit a whole block.</span>
+          </div>
+          <div class="builder-panel__content layers-container"></div>
+        </section>
+      </aside>
+
+      <main class="builder-canvas">
+        <div class="builder-canvas__frame">
+          <div id="gjs"></div>
+        </div>
+      </main>
+
+      <aside class="builder-sidebar builder-sidebar--right">
+        <section class="builder-panel">
+          <div class="builder-panel__header">
+            <strong>Component Settings</strong>
+            <span>Use this panel to change titles, text, labels, and custom block options.</span>
+          </div>
+          <div class="builder-note">If this panel looks empty, select the outer section again from the canvas or from
+            Layers. For header menu items, enter values like Home, Cart, Support in one field.</div>
+          <div class="builder-panel__content traits-container"></div>
+        </section>
+
+        <section class="builder-panel">
+          <div class="builder-panel__header">
+            <strong>Styles</strong>
+            <span>Use this panel for spacing, colors, borders, typography, and layout styling.</span>
+          </div>
+          <div class="builder-panel__content builder-panel__content--fill styles-container"></div>
+        </section>
+      </aside>
+    </div>
+  </div> -->
+ <div class="builder-shell">
+      <div class="builder-topbar">
+        <div class="builder-topbar__brand">
+          <strong>Email Template Builder</strong>
+          <span>Design production-ready email layouts with safe export and local autosave</span>
+        </div>
+        <div class="builder-topbar__actions">
+          <span id="save-status" class="builder-status" data-state="saved">Autosave ready</span>
+          <button id="btn-store" class="builder-button">Templates</button>
+          <select id="device-switcher" class="builder-select">
+            <option value="desktop">Desktop</option>
+            <option value="tablet">Tablet</option>
+            <option value="mobilePortrait">Mobile</option>
+          </select>
+          <button id="btn-undo" class="builder-button">Undo</button>
+          <button id="btn-redo" class="builder-button">Redo</button>
+          <button id="btn-clear" class="builder-button">Clear</button>
+          <button id="btn-fullscreen" class="builder-button">Focus Mode</button>
+          <button id="btn-code" class="builder-button">Export HTML</button>
+          <button id="btn-save" class="builder-button builder-button--primary">Save Draft</button>
+        </div>
+      </div>
+    </div>
+  <div id="template-modal" class="template-modal">
+    <div class="template-modal__content">
+      <div class="template-modal__header">
+        <h2>Template Store</h2>
+        <button id="btn-close-modal" class="template-modal__close">&times;</button>
+      </div>
+      <div id="template-grid" class="template-grid"></div>
+    </div>
+  </div>
+
+  <script src="minimal-builder-plugin.js"></script>
+  <script type="text/javascript">
+    const minimalBuilder = window.grapesjsMinimalBuilder;
+
+    const editor = grapesjs.init({
+      container: '#gjs',
+      height: '100%',
+      width: 'auto',
+      storageManager: false,
+      panels: {
+        defaults: [],
+      },
+      deviceManager: {
+        devices: [
+          { id: 'desktop', name: 'Desktop', width: '' },
+          { id: 'tablet', name: 'Tablet', width: '768px', widthMedia: '992px' },
+          { id: 'mobilePortrait', name: 'Mobile', width: '320px', widthMedia: '480px' },
+        ]
+      },
+      assetManager: {
+        assets: [
+          'https://picsum.photos/id/1060/900/700',
+          'https://picsum.photos/id/1080/900/700',
+          'https://picsum.photos/id/1050/900/700',
+          'https://picsum.photos/id/1039/900/700',
+        ],
+      },
+      blockManager: {
+        appendTo: '#blocks',
+      },
+      layerManager: {
+        appendTo: '.layers-container',
+      },
+      selectorManager: {
+        appendTo: '.styles-container',
+        componentFirst: true,
+      },
+      styleManager: {
+        appendTo: '.styles-container',
+        sectors: minimalBuilder.styleManagerSectors(),
+      },
+      traitManager: {
+        appendTo: '.traits-container',
+      },
+      baseCss: minimalBuilder.canvasCss,
+      plugins: [minimalBuilder],
+      components: [],
+    });
+
+    editor.on('load', () => {
+      const modal = document.getElementById('template-modal');
+      const grid = document.getElementById('template-grid');
+
+      document.getElementById('btn-store').addEventListener('click', () => {
+        grid.innerHTML = '';
+        Object.entries(minimalBuilder.emailTemplates).forEach(([key, tpl]) => {
+          const card = document.createElement('div');
+          card.className = 'template-card';
+          card.innerHTML = `<h3>${tpl.name}</h3><p>${tpl.description}</p>`;
+          card.addEventListener('click', () => {
+            editor.setComponents(tpl.components);
+            modal.classList.remove('open');
+          });
+          grid.appendChild(card);
+        });
+
+        const blankCard = document.createElement('div');
+        blankCard.className = 'template-card';
+        blankCard.innerHTML = `<h3>Blank Canvas</h3><p>Start from scratch with a clean slate.</p>`;
+        blankCard.addEventListener('click', () => {
+          editor.setComponents([]);
+          modal.classList.remove('open');
+        });
+        grid.appendChild(blankCard);
+
+        modal.classList.add('open');
+      });
+
+      document.getElementById('btn-close-modal').addEventListener('click', () => modal.classList.remove('open'));
+
+      document.getElementById('device-switcher').addEventListener('change', (e) => {
+        editor.setDevice(e.target.value);
+      });
+      document.getElementById('btn-undo').addEventListener('click', () => editor.runCommand('core:undo'));
+      document.getElementById('btn-redo').addEventListener('click', () => editor.runCommand('core:redo'));
+      document.getElementById('btn-clear').addEventListener('click', () => editor.runCommand('core:canvas-clear'));
+      document.getElementById('btn-fullscreen').addEventListener('click', () => editor.runCommand('core:fullscreen'));
+      document.getElementById('btn-code').addEventListener('click', () => editor.runCommand('core:open-code'));
+      document.getElementById('btn-save').addEventListener('click', () => {
+        const inlinedHtml = editor.getHtml({ inlineCss: true });
+        alert('Template Saved! Check console for generated HTML.');
+        console.log('--- GENERATED HTML ---');
+        console.log(inlinedHtml);
+      });
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,2460 @@
+(function (global) {
+  const blockLabel = (shortName, title, copy) => `
+    <div style="display:grid; gap:9px; text-align:left;">
+      <div
+        style="
+          width:44px;
+          height:44px;
+          border-radius:14px;
+          border:1px solid #e7e5e4;
+          background:linear-gradient(180deg, #ffffff 0%, #f5f5f4 100%);
+          display:grid;
+          place-items:center;
+          box-shadow:0 10px 24px rgba(15, 23, 42, 0.07);
+          color:#111827;
+          font-size:12px;
+          font-weight:700;
+          letter-spacing:0.08em;
+        "
+      >
+        ${shortName}
+      </div>
+      <div style="font-size:13px; font-weight:600; color:#111827;">${title}</div>
+      <div style="font-size:11px; line-height:1.45; color:#78716c;">${copy}</div>
+    </div>
+  `;
+
+  const buildProductCard = ({
+    productTag,
+    productName,
+    productPrice,
+    productCopy,
+    visualTone,
+    productImage,
+    productAlt,
+    productButtonText,
+    productHref,
+  }) => `
+    <div class="sb-product-card__visual ${visualTone}">
+      <div class="sb-product-card__glow"></div>
+      <span class="sb-product-card__tag">${productTag}</span>
+      ${productImage
+      ? `
+            <div class="sb-product-card__media">
+              <img class="sb-product-card__image" src="${productImage}" alt="${productAlt || productName}" />
+            </div>
+          `
+      : `
+            <div class="sb-product-card__shape">
+              <span></span>
+              <span></span>
+            </div>
+          `
+    }
+    </div>
+    <div class="sb-product-card__content">
+      <div class="sb-product-card__meta">
+        <span class="sb-product-card__price">${productPrice}</span>
+        <span class="sb-product-card__rating">4.9</span>
+      </div>
+      <h3 class="sb-product-card__title">${productName}</h3>
+      <p class="sb-product-card__copy">${productCopy}</p>
+      <a class="sb-link" href="${productHref || '#'}">${productButtonText || 'View details'}</a>
+    </div>
+  `;
+
+  const textTrait = (name, label) => ({ type: 'text', name, label, changeProp: true });
+  const textareaTrait = (name, label) => ({ type: 'text', name, label, changeProp: true });
+  const numberTrait = (name, label) => ({ type: 'number', name, label, changeProp: true });
+  const checkboxTrait = (name, label) => ({
+    type: 'checkbox',
+    name,
+    label,
+    changeProp: true,
+    valueTrue: true,
+    valueFalse: false,
+  });
+  const dynamicComponentTypes = new Set([
+    'site-header',
+    'hero-section',
+    'product-card',
+    'products-section',
+    'feature-carousel',
+    'feature-grid',
+    'testimonials-section',
+    'faq-section',
+    'cta-banner',
+    'site-footer',
+    'custom-list',
+  ]);
+  const traitCategories = {
+    media: { id: 'media', label: 'Media' },
+    content: { id: 'content', label: 'Content' },
+    action: { id: 'action', label: 'Action' },
+  };
+  const splitItems = (value) =>
+    `${value || ''}`
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+  const applyDynamicDelegation = (root) => {
+    const ownerType = root.get('type');
+
+    const walk = (component, currentOwnerType) => {
+      component.components().forEach((child) => {
+        const childType = child.get('type');
+
+        if (dynamicComponentTypes.has(childType)) {
+          return;
+        }
+
+        child.set('delegate', {
+          ...(child.get('delegate') || {}),
+          select: (cmp) => cmp.closestType(currentOwnerType),
+          layer: (cmp) => cmp.closestType(currentOwnerType),
+        });
+
+        walk(child, currentOwnerType);
+      });
+    };
+
+    walk(root, ownerType);
+  };
+
+  const bindRenderer = (model, propNames, renderContent) => {
+    const update = () => {
+      model.components(renderContent(model));
+      applyDynamicDelegation(model);
+    };
+    const changeEvents = propNames.map((propName) => `change:${propName}`).join(' ');
+    model.on(changeEvents, update);
+    update();
+  };
+
+  const registerAssetImageTrait = (editor) => {
+    const traits = editor.Traits;
+    if (traits.getType('asset-image')) return;
+
+    traits.addType('asset-image', {
+      eventCapture: ['input', 'change'],
+
+      createInput({ trait, component }) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'sb-trait-asset';
+        wrapper.innerHTML = `
+          <div class="sb-trait-asset__row">
+            <input class="sb-trait-asset__input" type="text" placeholder="Paste image URL or choose asset" />
+            <button class="sb-trait-asset__button" type="button">Choose</button>
+          </div>
+          <div class="sb-trait-asset__preview" data-empty="No image selected"></div>
+        `;
+
+        const input = wrapper.querySelector('.sb-trait-asset__input');
+        const button = wrapper.querySelector('.sb-trait-asset__button');
+        const preview = wrapper.querySelector('.sb-trait-asset__preview');
+        const propName = trait.get('name');
+        const setValue = (value) => {
+          input.value = value || '';
+          component.set(propName, value || '');
+          if (value) {
+            preview.innerHTML = `<img src="${value}" alt="" />`;
+          } else {
+            preview.innerHTML = '';
+          }
+        };
+
+        button.addEventListener('click', (event) => {
+          event.preventDefault();
+          const assetManager = editor.AssetManager;
+          assetManager.open({
+            types: ['image'],
+            select(asset, complete) {
+              setValue(asset.getSrc());
+              complete && assetManager.close();
+            },
+          });
+        });
+
+        return wrapper;
+      },
+
+      onEvent({ elInput, component, trait }) {
+        const input = elInput.querySelector('.sb-trait-asset__input');
+        component.set(trait.get('name'), input.value || '');
+      },
+
+      onUpdate({ elInput, component, trait }) {
+        const value = component.get(trait.get('name')) || '';
+        const input = elInput.querySelector('.sb-trait-asset__input');
+        const preview = elInput.querySelector('.sb-trait-asset__preview');
+
+        input.value = value;
+        if (value) {
+          preview.innerHTML = `<img src="${value}" alt="" />`;
+        } else {
+          preview.innerHTML = '';
+        }
+      },
+    });
+
+    traits.addType('dynamic-list', {
+      eventCapture: ['input', 'change'],
+      createInput({ trait, component }) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'sb-trait-dynamic-list';
+        wrapper.innerHTML = `
+          <div class="sb-dynamic-list-items"></div>
+          <button class="sb-dynamic-list-add" type="button" style="width: 100%; padding: 8px; margin-top: 10px; border-radius: 6px; border: 1px dashed #ccc; background: transparent; cursor: pointer;">+ Add Item</button>
+        `;
+
+        const list = wrapper.querySelector('.sb-dynamic-list-items');
+        const addBtn = wrapper.querySelector('.sb-dynamic-list-add');
+        const propName = trait.get('name');
+
+        const getItems = () => {
+          let val = component.get(propName);
+          if (typeof val === 'string') {
+            try { val = JSON.parse(val); } catch (e) { val = []; }
+          }
+          return Array.isArray(val) ? val : [];
+        };
+        const setItems = (items) => {
+          // GrapesJS needs a new array reference or deep clone to detect changes sometimes
+          component.set(propName, JSON.parse(JSON.stringify(items)));
+        };
+
+        const renderItems = () => {
+          list.innerHTML = '';
+          const items = getItems();
+          items.forEach((item, index) => {
+            const itemEl = document.createElement('div');
+            itemEl.style.marginBottom = '10px';
+            itemEl.style.padding = '10px';
+            itemEl.style.border = '1px solid #eee';
+            itemEl.style.borderRadius = '6px';
+            itemEl.innerHTML = `
+              <div style="display:flex; justify-content:space-between; margin-bottom: 5px;">
+                <label style="font-size: 11px; font-weight: bold; color: #555;">Item ${index + 1}</label>
+                <button type="button" data-index="${index}" class="sb-dynamic-list-remove" style="color:red; background:none; border:none; cursor:pointer;">&times;</button>
+              </div>
+              <input type="text" data-index="${index}" data-key="label" value="${item.label || ''}" placeholder="Label" style="width:100%; box-sizing:border-box; margin-bottom:6px; border-radius:4px; border:1px solid #ccc; padding:6px; font-size:12px;">
+              <input type="text" data-index="${index}" data-key="url" value="${item.url || ''}" placeholder="URL" style="width:100%; box-sizing:border-box; border-radius:4px; border:1px solid #ccc; padding:6px; font-size:12px;">
+            `;
+            list.appendChild(itemEl);
+          });
+        };
+
+        addBtn.addEventListener('click', () => {
+          setItems([...getItems(), { label: 'New Link', url: '#' }]);
+          renderItems();
+        });
+
+        list.addEventListener('input', (e) => {
+          if (e.target.tagName === 'INPUT') {
+            const index = e.target.getAttribute('data-index');
+            const key = e.target.getAttribute('data-key');
+            const items = [...getItems()];
+            items[index] = { ...items[index], [key]: e.target.value };
+            setItems(items);
+          }
+        });
+
+        list.addEventListener('click', (e) => {
+          if (e.target.classList.contains('sb-dynamic-list-remove')) {
+            const index = e.target.getAttribute('data-index');
+            const items = [...getItems()];
+            items.splice(index, 1);
+            setItems(items);
+            renderItems();
+          }
+        });
+
+        setTimeout(renderItems, 0);
+        return wrapper;
+      },
+      onEvent() { },
+      onUpdate() { },
+    });
+  };
+
+  const renderHeader = (model) => {
+    const navItems = Array.isArray(model.get('navItems')) ? model.get('navItems') : [];
+    return `
+    <div class="sb-shell">
+      <div class="sb-header__bar">
+        <div class="sb-brand">
+          ${model.get('brandInitials') ? `<div class="sb-brand__mark">${model.get('brandInitials')}</div>` : ''}
+          <div class="sb-brand__copy">
+            ${model.get('brandName') ? `<strong>${model.get('brandName')}</strong>` : ''}
+            ${model.get('brandTagline') ? `<span>${model.get('brandTagline')}</span>` : ''}
+          </div>
+        </div>
+        <nav class="sb-nav">
+          ${navItems.map((item) => `<a href="${item.url || '#'}">${item.label || ''}</a>`).join('')}
+        </nav>
+        <div class="sb-header__actions">
+          ${model.get('secondaryCta') ? `<a class="sb-button sb-button--secondary" href="${model.get('secondaryCtaLink') || '#'}">${model.get('secondaryCta')}</a>` : ''}
+          ${model.get('primaryCta') ? `<a class="sb-button sb-button--primary" href="${model.get('primaryCtaLink') || '#'}">${model.get('primaryCta')}</a>` : ''}
+        </div>
+      </div>
+    </div>
+  `.trim()
+  };
+
+  const renderHero = (model) => `
+    <div class="sb-shell">
+      <div class="sb-hero__layout">
+        <div class="sb-panel sb-hero__copy">
+          <span class="sb-pill">${model.get('heroEyebrow')}</span>
+          <h1 class="sb-hero__title">${model.get('heroTitle')}</h1>
+          <p class="sb-hero__text">${model.get('heroText')}</p>
+          <div class="sb-hero__actions">
+            <a class="sb-button sb-button--primary" href="#">${model.get('heroPrimaryCta')}</a>
+            <a class="sb-button sb-button--secondary" href="#">${model.get('heroSecondaryCta')}</a>
+          </div>
+          <div class="sb-hero__stats">
+            <div class="sb-stat">
+              <strong>${model.get('statOneValue')}</strong>
+              <span>${model.get('statOneLabel')}</span>
+            </div>
+            <div class="sb-stat">
+              <strong>${model.get('statTwoValue')}</strong>
+              <span>${model.get('statTwoLabel')}</span>
+            </div>
+            <div class="sb-stat">
+              <strong>${model.get('statThreeValue')}</strong>
+              <span>${model.get('statThreeLabel')}</span>
+            </div>
+          </div>
+        </div>
+        <div class="sb-hero__card">
+          <div class="sb-hero__surface">
+            <span class="sb-hero__badge">${model.get('heroBadge')}</span>
+            <div class="sb-hero__preview">
+              <div class="sb-preview-card">
+                <strong>${model.get('previewTitle')}</strong>
+                <p>${model.get('previewText')}</p>
+              </div>
+              <div class="sb-preview-grid">
+                <div class="sb-preview-mini">
+                  <span>${model.get('miniEyebrowOne')}</span>
+                  <strong>${model.get('miniTitleOne')}</strong>
+                </div>
+                <div class="sb-preview-mini">
+                  <span>${model.get('miniEyebrowTwo')}</span>
+                  <strong>${model.get('miniTitleTwo')}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const renderProductsSection = (model) => [
+    {
+      tagName: 'div',
+      classes: ['sb-shell'],
+      components: [
+        {
+          tagName: 'div',
+          classes: ['sb-section-heading'],
+          components: `
+            <span class="sb-pill">${model.get('productsEyebrow')}</span>
+            <h2>${model.get('productsTitle')}</h2>
+            <p>${model.get('productsText')}</p>
+          `,
+        },
+        {
+          tagName: 'div',
+          classes: ['sb-products__grid'],
+          components: [
+            {
+              type: 'product-card',
+              productTag: 'Signature',
+              productName: 'Nimbus Lamp',
+              productPrice: '$148',
+              productCopy: 'A sculpted table light designed for quiet corners and warm evening scenes.',
+              visualTone: 'tone-oat',
+            },
+            {
+              type: 'product-card',
+              productTag: 'Editors pick',
+              productName: 'Vale Chair',
+              productPrice: '$320',
+              productCopy: 'Textured upholstery, curved lines, and a silhouette that keeps the room feeling open.',
+              visualTone: 'tone-stone',
+            },
+            {
+              type: 'product-card',
+              productTag: 'Fresh arrival',
+              productName: 'Sora Shelf',
+              productPrice: '$205',
+              productCopy: 'An airy storage piece with a calm, gallery-like presence for modern interiors.',
+              visualTone: 'tone-sage',
+            },
+          ],
+        },
+      ],
+    },
+  ];
+
+  const renderCarousel = (model) => `
+    <div class="sb-shell">
+      <div class="sb-carousel__topbar">
+        <div class="sb-section-heading">
+          <span class="sb-pill">${model.get('carouselEyebrow')}</span>
+          <h2>${model.get('carouselTitle')}</h2>
+          <p>${model.get('carouselText')}</p>
+        </div>
+        <div class="sb-carousel__controls">
+          <button class="sb-carousel__button" type="button" data-carousel-prev aria-label="Previous slide">&lt;</button>
+          <button class="sb-carousel__button" type="button" data-carousel-next aria-label="Next slide">&gt;</button>
+        </div>
+      </div>
+      <div class="sb-carousel__viewport">
+        <div class="sb-carousel__track" data-carousel-track>
+          <div class="sb-carousel__slide" data-carousel-slide>
+            <div class="sb-carousel__content">
+              <div class="sb-carousel__media"></div>
+              <div class="sb-carousel__details">
+                <span class="sb-pill">Campaign 01</span>
+                <h3>${model.get('slideOneTitle')}</h3>
+                <p>${model.get('slideOneText')}</p>
+                <ul class="sb-carousel__list">
+                  <li>Clean space for collection messaging</li>
+                  <li>Works well with promos, launches, and bundles</li>
+                  <li>Looks balanced inside a light luxury theme</li>
+                </ul>
+                <a class="sb-button sb-button--primary" href="#">${model.get('slideOneCta')}</a>
+              </div>
+            </div>
+          </div>
+          <div class="sb-carousel__slide" data-carousel-slide>
+            <div class="sb-carousel__content">
+              <div class="sb-carousel__media"></div>
+              <div class="sb-carousel__details">
+                <span class="sb-pill">Campaign 02</span>
+                <h3>${model.get('slideTwoTitle')}</h3>
+                <p>${model.get('slideTwoText')}</p>
+                <ul class="sb-carousel__list">
+                  <li>Reusable for offers and featured collections</li>
+                  <li>Subtle motion with clean rounded surfaces</li>
+                  <li>Comfortable spacing for long-form copy</li>
+                </ul>
+                <a class="sb-button sb-button--secondary" href="#">${model.get('slideTwoCta')}</a>
+              </div>
+            </div>
+          </div>
+          <div class="sb-carousel__slide" data-carousel-slide>
+            <div class="sb-carousel__content">
+              <div class="sb-carousel__media"></div>
+              <div class="sb-carousel__details">
+                <span class="sb-pill">Campaign 03</span>
+                <h3>${model.get('slideThreeTitle')}</h3>
+                <p>${model.get('slideThreeText')}</p>
+                <ul class="sb-carousel__list">
+                  <li>Built for tasteful launch storytelling</li>
+                  <li>Great fit for premium direct-to-consumer pages</li>
+                  <li>Easy to duplicate and rewrite section by section</li>
+                </ul>
+                <a class="sb-button sb-button--primary" href="#">${model.get('slideThreeCta')}</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sb-carousel__dots">
+        <button class="sb-carousel__dot" type="button" data-carousel-dot aria-label="Go to slide 1"></button>
+        <button class="sb-carousel__dot" type="button" data-carousel-dot aria-label="Go to slide 2"></button>
+        <button class="sb-carousel__dot" type="button" data-carousel-dot aria-label="Go to slide 3"></button>
+      </div>
+    </div>
+  `;
+
+  const renderFeatureGrid = (model) => `
+    <div class="sb-shell">
+      <div class="sb-section-heading">
+        <span class="sb-pill">${model.get('featuresEyebrow')}</span>
+        <h2>${model.get('featuresTitle')}</h2>
+        <p>${model.get('featuresText')}</p>
+      </div>
+      <div class="sb-features__grid">
+        <article class="sb-feature-card">
+          <span class="sb-feature-card__index">01</span>
+          <h3>${model.get('featureOneTitle')}</h3>
+          <p>${model.get('featureOneText')}</p>
+        </article>
+        <article class="sb-feature-card">
+          <span class="sb-feature-card__index">02</span>
+          <h3>${model.get('featureTwoTitle')}</h3>
+          <p>${model.get('featureTwoText')}</p>
+        </article>
+        <article class="sb-feature-card">
+          <span class="sb-feature-card__index">03</span>
+          <h3>${model.get('featureThreeTitle')}</h3>
+          <p>${model.get('featureThreeText')}</p>
+        </article>
+      </div>
+    </div>
+  `;
+
+  const renderTestimonials = (model) => `
+    <div class="sb-shell">
+      <div class="sb-section-heading">
+        <span class="sb-pill">${model.get('testimonialsEyebrow')}</span>
+        <h2>${model.get('testimonialsTitle')}</h2>
+        <p>${model.get('testimonialsText')}</p>
+      </div>
+      <div class="sb-testimonials__grid">
+        <article class="sb-quote-card">
+          <blockquote>${model.get('quoteOne')}</blockquote>
+          <strong>${model.get('quoteOneName')}</strong>
+          <span>${model.get('quoteOneRole')}</span>
+        </article>
+        <article class="sb-quote-card">
+          <blockquote>${model.get('quoteTwo')}</blockquote>
+          <strong>${model.get('quoteTwoName')}</strong>
+          <span>${model.get('quoteTwoRole')}</span>
+        </article>
+        <article class="sb-quote-card">
+          <blockquote>${model.get('quoteThree')}</blockquote>
+          <strong>${model.get('quoteThreeName')}</strong>
+          <span>${model.get('quoteThreeRole')}</span>
+        </article>
+      </div>
+    </div>
+  `.trim();
+
+  const renderFaq = (model) => `
+    <div class="sb-shell">
+      <div class="sb-section-heading">
+        <span class="sb-pill">${model.get('faqEyebrow')}</span>
+        <h2>${model.get('faqTitle')}</h2>
+        <p>${model.get('faqText')}</p>
+      </div>
+      <div class="sb-faq__grid">
+        <article class="sb-faq__item">
+          <h3>${model.get('faqOneQuestion')}</h3>
+          <p>${model.get('faqOneAnswer')}</p>
+        </article>
+        <article class="sb-faq__item">
+          <h3>${model.get('faqTwoQuestion')}</h3>
+          <p>${model.get('faqTwoAnswer')}</p>
+        </article>
+        <article class="sb-faq__item">
+          <h3>${model.get('faqThreeQuestion')}</h3>
+          <p>${model.get('faqThreeAnswer')}</p>
+        </article>
+      </div>
+    </div>
+  `.trim();
+
+  const renderCtaBanner = (model) => `
+    <div class="sb-shell">
+      <div class="sb-cta__panel">
+        <div class="sb-cta__copy">
+          <span class="sb-pill">${model.get('ctaEyebrow')}</span>
+          <h2>${model.get('ctaTitle')}</h2>
+          <p>${model.get('ctaText')}</p>
+        </div>
+        <div class="sb-cta__actions">
+          <a class="sb-button sb-button--primary" href="#">${model.get('ctaPrimary')}</a>
+          <a class="sb-button sb-button--secondary" href="#">${model.get('ctaSecondary')}</a>
+        </div>
+      </div>
+    </div>
+  `.trim();
+
+  const renderFooter = (model) => {
+    const col1Links = Array.isArray(model.get('col1Links')) ? model.get('col1Links') : [];
+    const col2Links = Array.isArray(model.get('col2Links')) ? model.get('col2Links') : [];
+    return `
+    <div class="sb-shell">
+      <div class="sb-footer__bar">
+        <div class="sb-footer__grid">
+          <div class="sb-footer__intro">
+            <div class="sb-brand">
+              ${model.get('footerInitials') ? `<div class="sb-brand__mark">${model.get('footerInitials')}</div>` : ''}
+              <div class="sb-brand__copy">
+                ${model.get('footerBrand') ? `<strong>${model.get('footerBrand')}</strong>` : ''}
+                ${model.get('footerTagline') ? `<span>${model.get('footerTagline')}</span>` : ''}
+              </div>
+            </div>
+            ${model.get('footerText') ? `<p>${model.get('footerText')}</p>` : ''}
+          </div>
+          <div class="sb-footer__column">
+            ${model.get('col1Title') ? `<strong>${model.get('col1Title')}</strong>` : ''}
+            ${col1Links.map((n) => `<a href="${n.url || '#'}">${n.label || ''}</a>`).join('')}
+          </div>
+          <div class="sb-footer__column">
+            ${model.get('col2Title') ? `<strong>${model.get('col2Title')}</strong>` : ''}
+            ${col2Links.map((n) => `<a href="${n.url || '#'}">${n.label || ''}</a>`).join('')}
+          </div>
+          <div class="sb-footer__column">
+            ${model.get('col3Title') ? `<strong>${model.get('col3Title')}</strong>` : ''}
+            ${[
+        model.get('col3Text1'),
+        model.get('col3Text2'),
+        model.get('col3Text3')
+      ].filter(Boolean).map((t) => `<span>${t}</span>`).join('')}
+          </div>
+        </div>
+        <div class="sb-footer__meta">
+          <span>${model.get('footerMetaLeft')}</span>
+          <span>${model.get('footerMetaRight')}</span>
+        </div>
+      </div>
+    </div>
+  `.trim()};
+
+  const renderCustomList = (model) => {
+    const listItems = Array.isArray(model.get('listItems')) ? model.get('listItems') : [];
+    return `
+    <div class="sb-custom-list-wrapper">
+      <ul style="padding-left: 20px; margin: 10px 0; color: inherit;">
+        ${listItems.map((item) => `<li>${item.label || 'List item'}</li>`).join('')}
+      </ul>
+      ${model.get('listCta') ? `<div style="margin-top: 15px;"><a class="sb-button sb-button--primary" href="${model.get('listCtaLink') || '#'}">${model.get('listCta')}</a></div>` : ''}
+    </div>
+  `.trim()};
+
+  const canvasCss = `
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.92), transparent 28%),
+        linear-gradient(180deg, #f8f7f4 0%, #f2efea 100%);
+      color: #111827;
+      font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+    }
+
+    body:empty::before {
+      content: "Create something creative... drag blocks from the left panel to start building your template!";
+      display: block;
+      text-align: center;
+      padding: 150px 20px;
+      color: #a8a29e;
+      font-size: 1.25rem;
+      pointer-events: none;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .sb-section {
+      padding: 24px 28px;
+    }
+
+    .sb-custom-list ul {
+      list-style-type: inherit;
+      list-style-position: inherit;
+      list-style-image: inherit;
+    }
+
+    .sb-shell {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+    }
+
+    .sb-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid #e7e5e4;
+      background: rgba(255, 255, 255, 0.82);
+      color: #57534e;
+      font-size: 13px;
+      letter-spacing: 0.02em;
+    }
+
+    .sb-pill::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #0f766e;
+      box-shadow: 0 0 0 5px rgba(15, 118, 110, 0.12);
+    }
+
+    .sb-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 20px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-size: 14px;
+      font-weight: 600;
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        background-color 0.2s ease;
+    }
+
+    .sb-button:hover {
+      transform: translateY(-1px);
+    }
+
+    .sb-button--primary {
+      background: #111827;
+      color: #ffffff;
+      box-shadow: 0 18px 30px rgba(15, 23, 42, 0.14);
+    }
+
+    .sb-button--secondary {
+      background: rgba(255, 255, 255, 0.82);
+      border-color: #e7e5e4;
+      color: #111827;
+    }
+
+    .sb-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .sb-link::after {
+      content: '>';
+      font-size: 12px;
+    }
+
+    .sb-header__bar,
+    .sb-panel,
+    .sb-hero__card,
+    .sb-product-card,
+    .sb-carousel__viewport,
+    .sb-footer__bar {
+      border: 1px solid rgba(231, 229, 228, 0.95);
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 24px 56px rgba(15, 23, 42, 0.07);
+    }
+
+    .sb-header {
+      padding-top: 28px;
+      padding-bottom: 12px;
+    }
+
+    .sb-header__bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 18px 22px;
+      border-radius: 26px;
+    }
+
+    .sb-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sb-brand__mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #111827 0%, #334155 100%);
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+    }
+
+    .sb-brand__copy strong {
+      display: block;
+      font-size: 15px;
+      letter-spacing: 0.04em;
+    }
+
+    .sb-brand__copy span {
+      color: #78716c;
+      font-size: 12px;
+    }
+
+    .sb-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      color: #57534e;
+      font-size: 14px;
+    }
+
+    .sb-nav a:hover {
+      color: #111827;
+    }
+
+    .sb-header__actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .sb-hero {
+      padding-top: 12px;
+      padding-bottom: 22px;
+    }
+
+    .sb-hero__layout {
+      display: grid;
+      grid-template-columns: 1.18fr 0.82fr;
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .sb-panel {
+      border-radius: 34px;
+    }
+
+    .sb-hero__copy {
+      padding: 54px;
+    }
+
+    .sb-hero__title {
+      margin: 20px 0 14px;
+      font-size: clamp(42px, 5vw, 76px);
+      line-height: 0.96;
+      letter-spacing: -0.05em;
+    }
+
+    .sb-hero__text {
+      max-width: 620px;
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.75;
+      color: #57534e;
+    }
+
+    .sb-hero__actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 28px;
+    }
+
+    .sb-hero__stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 34px;
+    }
+
+    .sb-stat {
+      padding: 18px;
+      border-radius: 22px;
+      background: #f8f7f4;
+      border: 1px solid #ece8e1;
+    }
+
+    .sb-stat strong {
+      display: block;
+      font-size: 26px;
+      margin-bottom: 6px;
+      letter-spacing: -0.04em;
+    }
+
+    .sb-stat span {
+      color: #78716c;
+      font-size: 13px;
+    }
+
+    .sb-hero__card {
+      position: relative;
+      overflow: hidden;
+      padding: 28px;
+      border-radius: 34px;
+      background:
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.82), transparent 30%),
+        linear-gradient(180deg, #fafaf9 0%, #f1efeb 100%);
+    }
+
+    .sb-hero__surface {
+      position: relative;
+      height: 100%;
+      min-height: 460px;
+      border-radius: 28px;
+      padding: 26px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(244, 241, 236, 0.88)),
+        linear-gradient(135deg, rgba(15, 23, 42, 0.03), transparent 50%);
+      border: 1px solid rgba(231, 229, 228, 0.95);
+    }
+
+    .sb-hero__badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(17, 24, 39, 0.94);
+      color: #ffffff;
+      font-size: 12px;
+      letter-spacing: 0.06em;
+    }
+
+    .sb-hero__preview {
+      position: absolute;
+      left: 26px;
+      right: 26px;
+      bottom: 26px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .sb-preview-card {
+      padding: 20px;
+      border-radius: 24px;
+      background: #ffffff;
+      border: 1px solid #ece8e1;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+    }
+
+    .sb-preview-card strong {
+      display: block;
+      font-size: 22px;
+      margin-bottom: 8px;
+      letter-spacing: -0.03em;
+    }
+
+    .sb-preview-card p {
+      margin: 0;
+      color: #57534e;
+      line-height: 1.65;
+      font-size: 14px;
+    }
+
+    .sb-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .sb-preview-mini {
+      border-radius: 22px;
+      padding: 22px;
+      min-height: 126px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8f7f4 100%);
+      border: 1px solid #ece8e1;
+    }
+
+    .sb-preview-mini span {
+      display: inline-block;
+      font-size: 12px;
+      color: #78716c;
+      margin-bottom: 10px;
+    }
+
+    .sb-preview-mini strong {
+      display: block;
+      font-size: 19px;
+      line-height: 1.35;
+      letter-spacing: -0.03em;
+    }
+
+    .sb-products {
+      padding-top: 10px;
+      padding-bottom: 24px;
+    }
+
+    .sb-section-heading {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .sb-section-heading h2 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+    }
+
+    .sb-section-heading p {
+      max-width: 680px;
+      margin: 0;
+      font-size: 16px;
+      color: #57534e;
+      line-height: 1.7;
+    }
+
+    .sb-products__grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+    }
+
+    .sb-product-card {
+      overflow: hidden;
+      border-radius: 30px;
+    }
+
+    .sb-product-card__visual {
+      position: relative;
+      min-height: 240px;
+      padding: 18px;
+      overflow: hidden;
+      background: linear-gradient(180deg, #f8f7f4 0%, #efebe6 100%);
+    }
+
+    .sb-product-card__visual.tone-oat {
+      background: linear-gradient(180deg, #faf7f2 0%, #efe8df 100%);
+    }
+
+    .sb-product-card__visual.tone-stone {
+      background: linear-gradient(180deg, #f4f4f5 0%, #e7e5e4 100%);
+    }
+
+    .sb-product-card__visual.tone-sage {
+      background: linear-gradient(180deg, #f0f5f2 0%, #dbe7df 100%);
+    }
+
+    .sb-product-card__glow {
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      right: -60px;
+      top: -70px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+      filter: blur(10px);
+    }
+
+    .sb-product-card__tag {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      color: #57534e;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+    }
+
+    .sb-product-card__media {
+      position: absolute;
+      inset: auto 20px 18px 20px;
+      min-height: 164px;
+      overflow: hidden;
+      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.78);
+      box-shadow: 0 22px 38px rgba(15, 23, 42, 0.12);
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .sb-product-card__image {
+      display: block;
+      width: 100%;
+      height: 178px;
+      object-fit: cover;
+    }
+
+    .sb-product-card__shape {
+      position: absolute;
+      inset: auto 20px 18px 20px;
+      display: grid;
+      place-items: center;
+      min-height: 152px;
+    }
+
+    .sb-product-card__shape span:first-child {
+      width: 136px;
+      height: 136px;
+      border-radius: 36px;
+      background: linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0.68) 100%);
+      box-shadow: 0 24px 42px rgba(15, 23, 42, 0.12);
+      transform: rotate(12deg);
+    }
+
+    .sb-product-card__shape span:last-child {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      border-radius: 24px;
+      background: rgba(17, 24, 39, 0.08);
+      transform: translate(48px, 34px);
+    }
+
+    .sb-product-card__content {
+      display: grid;
+      gap: 12px;
+      padding: 24px;
+    }
+
+    .sb-product-card__meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .sb-product-card__price {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .sb-product-card__rating {
+      color: #78716c;
+      font-size: 13px;
+    }
+
+    .sb-product-card__title {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: -0.04em;
+    }
+
+    .sb-product-card__copy {
+      margin: 0;
+      color: #57534e;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .sb-carousel {
+      padding-top: 14px;
+      padding-bottom: 26px;
+    }
+
+    .sb-carousel__topbar {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .sb-carousel__controls {
+      display: flex;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .sb-carousel__button {
+      width: 46px;
+      height: 46px;
+      border: 1px solid #e7e5e4;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.9);
+      color: #111827;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .sb-carousel__viewport {
+      overflow: hidden;
+      border-radius: 34px;
+    }
+
+    .sb-carousel__track {
+      display: flex;
+      transition: transform 0.45s ease;
+    }
+
+    .sb-carousel__slide {
+      min-width: 100%;
+      padding: 34px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(249, 248, 246, 0.98) 100%);
+    }
+
+    .sb-carousel__content {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 26px;
+      align-items: center;
+    }
+
+    .sb-carousel__media {
+      border-radius: 28px;
+      min-height: 300px;
+      border: 1px solid #ece8e1;
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.92), transparent 40%),
+        linear-gradient(180deg, #f7f5f1 0%, #e9e4dd 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sb-carousel__media::before,
+    .sb-carousel__media::after {
+      content: '';
+      position: absolute;
+      border-radius: 999px;
+      background: rgba(17, 24, 39, 0.08);
+    }
+
+    .sb-carousel__media::before {
+      width: 210px;
+      height: 210px;
+      right: -30px;
+      top: -30px;
+    }
+
+    .sb-carousel__media::after {
+      width: 120px;
+      height: 120px;
+      left: 32px;
+      bottom: 26px;
+    }
+
+    .sb-carousel__details {
+      display: grid;
+      gap: 16px;
+    }
+
+    .sb-carousel__details h3 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+    }
+
+    .sb-carousel__details p {
+      margin: 0;
+      color: #57534e;
+      line-height: 1.75;
+      font-size: 15px;
+    }
+
+    .sb-carousel__list {
+      display: grid;
+      gap: 12px;
+      padding: 0;
+      margin: 2px 0 4px;
+      list-style: none;
+    }
+
+    .sb-carousel__list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #44403c;
+      font-size: 14px;
+    }
+
+    .sb-carousel__list li::before {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #0f766e;
+      box-shadow: 0 0 0 6px rgba(15, 118, 110, 0.1);
+    }
+
+    .sb-carousel__dots {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .sb-carousel__dot {
+      width: 11px;
+      height: 11px;
+      border: 0;
+      border-radius: 999px;
+      background: #d6d3d1;
+      cursor: pointer;
+    }
+
+    .sb-features,
+    .sb-testimonials,
+    .sb-faq,
+    .sb-cta {
+      padding-top: 12px;
+      padding-bottom: 24px;
+    }
+
+    .sb-features__grid,
+    .sb-testimonials__grid,
+    .sb-faq__grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+    }
+
+    .sb-feature-card,
+    .sb-quote-card,
+    .sb-faq__item,
+    .sb-cta__panel {
+      border: 1px solid rgba(231, 229, 228, 0.95);
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 24px 56px rgba(15, 23, 42, 0.07);
+    }
+
+    .sb-feature-card,
+    .sb-quote-card,
+    .sb-faq__item {
+      padding: 24px;
+      border-radius: 30px;
+    }
+
+    .sb-feature-card {
+      display: grid;
+      gap: 14px;
+    }
+
+    .sb-feature-card__index {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: #111827;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .sb-feature-card h3,
+    .sb-faq__item h3 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: -0.04em;
+    }
+
+    .sb-feature-card p,
+    .sb-faq__item p {
+      margin: 0;
+      color: #57534e;
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .sb-quote-card {
+      display: grid;
+      gap: 14px;
+      min-height: 100%;
+    }
+
+    .sb-quote-card blockquote {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.6;
+      letter-spacing: -0.03em;
+    }
+
+    .sb-quote-card strong {
+      display: block;
+      font-size: 15px;
+    }
+
+    .sb-quote-card span {
+      color: #78716c;
+      font-size: 13px;
+    }
+
+    .sb-cta__panel {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 28px;
+      align-items: center;
+      padding: 32px;
+      border-radius: 34px;
+    }
+
+    .sb-cta__copy h2 {
+      margin: 16px 0 12px;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.06;
+      letter-spacing: -0.04em;
+    }
+
+    .sb-cta__copy p {
+      margin: 0;
+      color: #57534e;
+      font-size: 15px;
+      line-height: 1.75;
+    }
+
+    .sb-cta__actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .sb-footer {
+      padding-top: 8px;
+      padding-bottom: 42px;
+    }
+
+    .sb-footer__bar {
+      border-radius: 34px;
+      padding: 30px;
+    }
+
+    .sb-footer__grid {
+      display: grid;
+      grid-template-columns: 1.3fr 0.8fr 0.8fr 0.9fr;
+      gap: 24px;
+    }
+
+    .sb-footer__intro p,
+    .sb-footer__column a,
+    .sb-footer__meta {
+      color: #57534e;
+    }
+
+    .sb-footer__intro p,
+    .sb-footer__column a,
+    .sb-footer__meta,
+    .sb-footer__column span {
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .sb-footer__column {
+      display: grid;
+      gap: 8px;
+    }
+
+    .sb-footer__column strong {
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      color: #111827;
+    }
+
+    .sb-footer__column a:hover {
+      color: #111827;
+    }
+
+    .sb-footer__meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 26px;
+      padding-top: 18px;
+      border-top: 1px solid #ece8e1;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 1040px) {
+      .sb-hero__layout,
+      .sb-carousel__content,
+      .sb-footer__grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sb-products__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .sb-features__grid,
+      .sb-testimonials__grid,
+      .sb-faq__grid,
+      .sb-cta__panel {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .sb-section {
+        padding: 18px 16px;
+      }
+
+      .sb-header__bar,
+      .sb-hero__copy,
+      .sb-hero__card,
+      .sb-footer__bar,
+      .sb-carousel__slide {
+        padding: 22px;
+        border-radius: 26px;
+      }
+
+      .sb-header__bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .sb-nav,
+      .sb-header__actions {
+        justify-content: flex-start;
+      }
+
+      .sb-hero__stats,
+      .sb-products__grid,
+      .sb-preview-grid,
+      .sb-features__grid,
+      .sb-testimonials__grid,
+      .sb-faq__grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sb-hero__surface {
+        min-height: 360px;
+        padding: 18px;
+      }
+
+      .sb-carousel__topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .sb-footer__meta {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .sb-cta__actions {
+        justify-content: flex-start;
+      }
+    }
+  `;
+
+  const emailTemplates = {
+    minimal: {
+      name: 'Minimal Store',
+      description: 'The default storefront with all main sections.',
+      components: [
+        { type: 'site-header' },
+        { type: 'hero-section' },
+        { type: 'feature-grid' },
+        { type: 'products-section' },
+        { type: 'feature-carousel' },
+        { type: 'testimonials-section' },
+        { type: 'faq-section' },
+        { type: 'cta-banner' },
+        { type: 'site-footer' },
+      ]
+    },
+    welcome: {
+      name: 'Welcome Email',
+      description: 'A friendly greeting to new subscribers.',
+      components: [
+        { type: 'site-header' },
+        { type: 'hero-section', heroTitle: 'Welcome to our community!', heroEyebrow: 'Hello {{name}}', heroText: 'We are so glad you are here. Check out some of the great features you now have access to.' },
+        { type: 'feature-grid' },
+        { type: 'site-footer' }
+      ]
+    },
+    newsletter: {
+      name: 'Monthly Newsletter',
+      description: 'A clean layout for your regular updates.',
+      components: [
+        { type: 'site-header' },
+        { type: 'hero-section', heroTitle: "What's new this month?", heroEyebrow: 'October Update', heroText: 'Here are all the new things we shipped this month.' },
+        { type: 'custom-list', listCta: 'Read more', listItems: [{label: 'New dark mode', url: ''}, {label: 'Faster load times', url: ''}] },
+        { type: 'site-footer' }
+      ]
+    }
+  };
+
+  const styleManagerSectors = () => [
+    {
+      name: 'Layout',
+      open: true,
+      buildProps: ['display', 'position', 'width', 'min-height', 'margin', 'padding'],
+    },
+    {
+      name: 'Typography',
+      open: false,
+      buildProps: ['font-size', 'font-weight', 'letter-spacing', 'color', 'line-height', 'text-align'],
+    },
+    {
+      name: 'Decorations',
+      open: false,
+      buildProps: ['background-color', 'background', 'border-radius', 'border', 'box-shadow', 'opacity'],
+    },
+    {
+      name: 'Flex',
+      open: false,
+      buildProps: ['flex-direction', 'justify-content', 'align-items', 'gap', 'flex-wrap'],
+    },
+    {
+      name: 'Lists',
+      open: false,
+      properties: [
+        {
+          name: 'List Style',
+          property: 'list-style-type',
+          type: 'select',
+          default: 'disc',
+          options: [
+            { id: 'none', label: 'None' },
+            { id: 'disc', label: 'Disc' },
+            { id: 'circle', label: 'Circle' },
+            { id: 'square', label: 'Square' },
+            { id: 'decimal', label: 'Numbers' },
+            { id: 'lower-alpha', label: 'Letters (a, b, c)' },
+            { id: 'upper-alpha', label: 'Letters (A, B, C)' },
+            { id: 'lower-roman', label: 'Roman (i, ii, iii)' },
+            { id: 'upper-roman', label: 'Roman (I, II, III)' }
+          ]
+        },
+        {
+          name: 'Position',
+          property: 'list-style-position',
+          type: 'select',
+          default: 'outside',
+          options: [
+            { id: 'inside', label: 'Inside' },
+            { id: 'outside', label: 'Outside' }
+          ]
+        }
+      ]
+    },
+    {
+      name: 'Extra',
+      open: false,
+      buildProps: ['transition', 'transform'],
+    },
+  ];
+
+  const minimalBuilderPlugin = (editor, opts = {}) => {
+    registerAssetImageTrait(editor);
+
+    const components = editor.DomComponents;
+    const blocks = editor.BlockManager;
+    const sectionCategory = opts.sectionCategory || { id: 'sections', label: 'Sections', open: true };
+    const commerceCategory = opts.commerceCategory || { id: 'commerce', label: 'Commerce', open: true };
+
+    components.addType('site-header', {
+      model: {
+        defaults: {
+          name: 'Header',
+          tagName: 'header',
+          classes: ['sb-section', 'sb-header'],
+          stylable: true,
+          brandInitials: 'LUX',
+          brandName: 'Luma Studio',
+          brandTagline: 'Modern home objects',
+          navItems: [
+            { label: 'Shop', url: '#' },
+            { label: 'Collections', url: '#' },
+            { label: 'Journal', url: '#' },
+            { label: 'About', url: '#' }
+          ],
+          secondaryCta: 'Book a tour',
+          secondaryCtaLink: '#',
+          primaryCta: 'Start shopping',
+          primaryCtaLink: '#',
+          traits: [
+            textTrait('brandInitials', 'Brand mark'),
+            textTrait('brandName', 'Brand name'),
+            textTrait('brandTagline', 'Brand tagline'),
+            { type: 'dynamic-list', name: 'navItems', label: 'Menu items' },
+            textTrait('secondaryCta', 'Secondary button'),
+            textTrait('secondaryCtaLink', 'Secondary URL'),
+            textTrait('primaryCta', 'Primary button'),
+            textTrait('primaryCtaLink', 'Primary URL'),
+          ],
+        },
+
+        init() {
+          bindRenderer(
+            this,
+            ['brandInitials', 'brandName', 'brandTagline', 'navItems', 'secondaryCta', 'secondaryCtaLink', 'primaryCta', 'primaryCtaLink'],
+            renderHeader,
+          );
+        },
+      },
+    });
+
+    components.addType('hero-section', {
+      model: {
+        defaults: {
+          name: 'Hero Section',
+          tagName: 'section',
+          classes: ['sb-section', 'sb-hero'],
+          stylable: true,
+          heroEyebrow: 'Quiet luxury for everyday spaces',
+          heroTitle: 'A soft white storefront for premium product stories.',
+          heroText:
+            'Build landing pages that feel clean, expensive, and easy to browse. Every section here is made to be dragged, duplicated, and restyled inside GrapesJS without starting from scratch.',
+          heroPrimaryCta: 'Explore collection',
+          heroSecondaryCta: 'See lookbook',
+          statOneValue: '24h',
+          statOneLabel: 'Fast content updates',
+          statTwoValue: '12',
+          statTwoLabel: 'Reusable page sections',
+          statThreeValue: '98%',
+          statThreeLabel: 'Clean visual consistency',
+          heroBadge: 'New drop',
+          previewTitle: 'Minimal surfaces. Warm shadows. Clear hierarchy.',
+          previewText:
+            'The layout uses white cards, calm borders, rounded corners, and roomy spacing to keep the whole builder elegant and easy to edit.',
+          miniEyebrowOne: 'Featured',
+          miniTitleOne: 'Hero with strong conversion focus',
+          miniEyebrowTwo: 'Flexible',
+          miniTitleTwo: 'Cards and sections that can be mixed freely',
+          traits: [
+            textTrait('heroEyebrow', 'Eyebrow'),
+            textareaTrait('heroTitle', 'Hero title'),
+            textareaTrait('heroText', 'Hero text'),
+            textTrait('heroPrimaryCta', 'Primary button'),
+            textTrait('heroSecondaryCta', 'Secondary button'),
+            textTrait('statOneValue', 'Stat 1 value'),
+            textTrait('statOneLabel', 'Stat 1 label'),
+            textTrait('statTwoValue', 'Stat 2 value'),
+            textTrait('statTwoLabel', 'Stat 2 label'),
+            textTrait('statThreeValue', 'Stat 3 value'),
+            textTrait('statThreeLabel', 'Stat 3 label'),
+            textTrait('heroBadge', 'Preview badge'),
+            textareaTrait('previewTitle', 'Preview title'),
+            textareaTrait('previewText', 'Preview text'),
+            textTrait('miniEyebrowOne', 'Mini 1 eyebrow'),
+            textTrait('miniTitleOne', 'Mini 1 title'),
+            textTrait('miniEyebrowTwo', 'Mini 2 eyebrow'),
+            textTrait('miniTitleTwo', 'Mini 2 title'),
+          ],
+        },
+
+        init() {
+          bindRenderer(
+            this,
+            [
+              'heroEyebrow',
+              'heroTitle',
+              'heroText',
+              'heroPrimaryCta',
+              'heroSecondaryCta',
+              'statOneValue',
+              'statOneLabel',
+              'statTwoValue',
+              'statTwoLabel',
+              'statThreeValue',
+              'statThreeLabel',
+              'heroBadge',
+              'previewTitle',
+              'previewText',
+              'miniEyebrowOne',
+              'miniTitleOne',
+              'miniEyebrowTwo',
+              'miniTitleTwo',
+            ],
+            renderHero,
+          );
+        },
+      },
+    });
+
+    components.addType('product-card', {
+      model: {
+        defaults: {
+          name: 'Product Card',
+          tagName: 'article',
+          classes: ['sb-product-card'],
+          droppable: false,
+          stylable: ['background-color', 'padding', 'margin', 'border-radius', 'box-shadow'],
+          productTag: 'Signature',
+          productName: 'Nimbus Lamp',
+          productPrice: '$148',
+          productCopy: 'Soft glow, matte finish, and a shape that works in living rooms, bedrooms, and boutique displays.',
+          productImage: '',
+          productAlt: 'Nimbus Lamp',
+          productButtonText: 'View details',
+          productHref: '#',
+          visualTone: 'tone-oat',
+          traits: [
+            { type: 'asset-image', name: 'productImage', label: 'Product image', changeProp: true, category: traitCategories.media },
+            { type: 'text', name: 'productAlt', label: 'Image alt', changeProp: true, category: traitCategories.media },
+            { type: 'text', name: 'productTag', label: 'Tag', changeProp: true, category: traitCategories.content },
+            { type: 'text', name: 'productName', label: 'Name', changeProp: true, category: traitCategories.content },
+            { type: 'text', name: 'productPrice', label: 'Price', changeProp: true, category: traitCategories.content },
+            { type: 'text', name: 'productCopy', label: 'Description', changeProp: true, category: traitCategories.content },
+            { type: 'text', name: 'productButtonText', label: 'Button text', changeProp: true, category: traitCategories.action },
+            { type: 'text', name: 'productHref', label: 'Button link', changeProp: true, category: traitCategories.action },
+            {
+              type: 'select',
+              name: 'visualTone',
+              label: 'Visual tone',
+              changeProp: true,
+              category: traitCategories.content,
+              options: [
+                { id: 'tone-oat', label: 'Oat' },
+                { id: 'tone-stone', label: 'Stone' },
+                { id: 'tone-sage', label: 'Sage' },
+              ],
+            },
+          ],
+        },
+
+        init() {
+          const syncContent = () => {
+            this.components(
+              buildProductCard({
+                productTag: this.get('productTag'),
+                productName: this.get('productName'),
+                productPrice: this.get('productPrice'),
+                productCopy: this.get('productCopy'),
+                productImage: this.get('productImage'),
+                productAlt: this.get('productAlt'),
+                productButtonText: this.get('productButtonText'),
+                productHref: this.get('productHref'),
+                visualTone: this.get('visualTone'),
+              }),
+            );
+            applyDynamicDelegation(this);
+          };
+
+          this.on(
+            'change:productTag change:productName change:productPrice change:productCopy change:productImage change:productAlt change:productButtonText change:productHref change:visualTone',
+            syncContent,
+          );
+          syncContent();
+        },
+      },
+    });
+
+    components.addType('products-section', {
+      model: {
+        defaults: {
+          name: 'Products Section',
+          tagName: 'section',
+          classes: ['sb-section', 'sb-products'],
+          stylable: true,
+          productsEyebrow: 'Best sellers',
+          productsTitle: 'Product cards that already feel polished and store-ready.',
+          productsText:
+            'Duplicate these cards, edit the content from traits, and keep the visual system clean with subtle borders, soft backgrounds, and generous spacing.',
+          traits: [
+            textTrait('productsEyebrow', 'Eyebrow'),
+            textareaTrait('productsTitle', 'Section title'),
+            textareaTrait('productsText', 'Section text'),
+          ],
+        },
+
+        init() {
+          bindRenderer(this, ['productsEyebrow', 'productsTitle', 'productsText'], renderProductsSection);
+        },
+      },
+    });
+
+    components.addType('feature-carousel', {
+      model: {
+        defaults: {
+          name: 'Carousel',
+          tagName: 'section',
+          classes: ['sb-section', 'sb-carousel'],
+          stylable: true,
+          carouselEyebrow: 'Featured stories',
+          carouselTitle: 'A carousel section for launches, promos, and premium highlights.',
+          carouselText:
+            'Use this block for rotating product narratives, campaign cards, or seasonal collections with just a few clicks.',
+          slideOneTitle: 'Hero-style product storytelling with room for benefits and calls to action.',
+          slideOneText:
+            'Pair strong copy with a visual panel so every featured collection feels considered, elevated, and easy to scan on both desktop and mobile.',
+          slideOneCta: 'Open campaign',
+          slideTwoTitle: 'Showcase bundles, seasonal edits, or bestselling product groups in a softer layout.',
+          slideTwoText:
+            'The carousel keeps the page dynamic without adding visual noise, which helps the overall builder stay minimal and attractive.',
+          slideTwoCta: 'View bundle',
+          slideThreeTitle: 'Promote limited drops with a controlled, editorial feel instead of a loud slider.',
+          slideThreeText:
+            'This section gives you motion and variation while still fitting the white, premium theme used by the rest of the page.',
+          slideThreeCta: 'See new drop',
+          autoplay: true,
+          interval: 4200,
+          'script-props': ['autoplay', 'interval'],
+          traits: [
+            textTrait('carouselEyebrow', 'Eyebrow'),
+            textareaTrait('carouselTitle', 'Section title'),
+            textareaTrait('carouselText', 'Section text'),
+            textareaTrait('slideOneTitle', 'Slide 1 title'),
+            textareaTrait('slideOneText', 'Slide 1 text'),
+            textTrait('slideOneCta', 'Slide 1 button'),
+            textareaTrait('slideTwoTitle', 'Slide 2 title'),
+            textareaTrait('slideTwoText', 'Slide 2 text'),
+            textTrait('slideTwoCta', 'Slide 2 button'),
+            textareaTrait('slideThreeTitle', 'Slide 3 title'),
+            textareaTrait('slideThreeText', 'Slide 3 text'),
+            textTrait('slideThreeCta', 'Slide 3 button'),
+            checkboxTrait('autoplay', 'Autoplay'),
+            numberTrait('interval', 'Autoplay delay'),
+          ],
+          script: function (props) {
+            const root = this;
+            if (root.__sbCarouselCleanup) root.__sbCarouselCleanup();
+
+            const track = root.querySelector('[data-carousel-track]');
+            const slides = Array.prototype.slice.call(root.querySelectorAll('[data-carousel-slide]'));
+            const dots = Array.prototype.slice.call(root.querySelectorAll('[data-carousel-dot]'));
+            const prev = root.querySelector('[data-carousel-prev]');
+            const next = root.querySelector('[data-carousel-next]');
+
+            if (!track || !slides.length) return;
+
+            let index = 0;
+            let timer = null;
+
+            const render = (nextIndex) => {
+              index = (nextIndex + slides.length) % slides.length;
+              track.style.transform = 'translateX(-' + index * 100 + '%)';
+              dots.forEach((dot, dotIndex) => {
+                dot.style.background = dotIndex === index ? '#111827' : '#d6d3d1';
+                dot.setAttribute('aria-pressed', dotIndex === index ? 'true' : 'false');
+              });
+            };
+
+            const stop = () => {
+              if (timer) {
+                clearInterval(timer);
+                timer = null;
+              }
+            };
+
+            const start = () => {
+              stop();
+              if (!props.autoplay) return;
+              const delay = Math.max(2000, Number(props.interval) || 4200);
+              timer = setInterval(() => render(index + 1), delay);
+            };
+
+            const onPrev = () => {
+              render(index - 1);
+              start();
+            };
+
+            const onNext = () => {
+              render(index + 1);
+              start();
+            };
+
+            const onEnter = () => stop();
+            const onLeave = () => start();
+
+            if (prev) prev.addEventListener('click', onPrev);
+            if (next) next.addEventListener('click', onNext);
+
+            dots.forEach((dot, dotIndex) => {
+              const onClick = () => {
+                render(dotIndex);
+                start();
+              };
+
+              dot.__sbDotHandler = onClick;
+              dot.addEventListener('click', onClick);
+            });
+
+            root.addEventListener('mouseenter', onEnter);
+            root.addEventListener('mouseleave', onLeave);
+
+            render(0);
+            start();
+
+            root.__sbCarouselCleanup = () => {
+              stop();
+              if (prev) prev.removeEventListener('click', onPrev);
+              if (next) next.removeEventListener('click', onNext);
+              dots.forEach((dot) => {
+                if (dot.__sbDotHandler) {
+                  dot.removeEventListener('click', dot.__sbDotHandler);
+                  delete dot.__sbDotHandler;
+                }
+              });
+              root.removeEventListener('mouseenter', onEnter);
+              root.removeEventListener('mouseleave', onLeave);
+            };
+          },
+        },
+
+        init() {
+          bindRenderer(
+            this,
+            [
+              'carouselEyebrow',
+              'carouselTitle',
+              'carouselText',
+              'slideOneTitle',
+              'slideOneText',
+              'slideOneCta',
+              'slideTwoTitle',
+              'slideTwoText',
+              'slideTwoCta',
+              'slideThreeTitle',
+              'slideThreeText',
+              'slideThreeCta',
+            ],
+            renderCarousel,
+          );
+        },
+      },
+    });
+
+    components.addType('feature-grid', {
+      model: {
+        defaults: {
+          name: 'Features Grid',
+          tagName: 'section',
+          classes: ['sb-section', 'sb-features'],
+          stylable: true,
+          featuresEyebrow: 'Why it works',
+          featuresTitle: 'More custom blocks with cleaner settings in the right sidebar.',
+          featuresText:
+            'Every section below is designed so you can drag it in and then edit meaningful content from the right panel without hunting around the canvas.',
+          featureOneTitle: 'Clear component settings',
+          featureOneText: 'Select the section and edit titles, paragraphs, and button labels directly from traits.',
+          featureTwoTitle: 'Soft white visual system',
+          featureTwoText: 'All cards, panels, and content surfaces stay consistent with the light minimal theme.',
+          featureThreeTitle: 'Reusable commerce sections',
+          featureThreeText: 'Mix hero blocks, product grids, testimonials, FAQ rows, and CTA strips on one page.',
+          traits: [
+            textTrait('featuresEyebrow', 'Eyebrow'),
+            textareaTrait('featuresTitle', 'Section title'),
+            textareaTrait('featuresText', 'Section text'),
+            textTrait('featureOneTitle', 'Feature 1 title'),
+            textareaTrait('featureOneText', 'Feature 1 text'),
+            textTrait('featureTwoTitle', 'Feature 2 title'),
+            textareaTrait('featureTwoText', 'Feature 2 text'),
+            textTrait('featureThreeTitle', 'Feature 3 title'),
+            textareaTrait('featureThreeText', 'Feature 3 text'),
+          ],
+        },
+
+        init() {
+          bindRenderer(
+            this,
+            [
+              'featuresEyebrow',
+              'featuresTitle',
+              'featuresText',
+              'featureOneTitle',
+              'featureOneText',
+              'featureTwoTitle',
+              'featureTwoText',
+              'featureThreeTitle',
+              'featureThreeText',
+            ],
+            renderFeatureGrid,
+          );
+        },
+      },
+    });
+
+    components.addType('testimonials-section', {
+      model: {
+        defaults: {
+          name: 'Testimonials',
+          tagName: 'section',
+          classes: ['sb-section', 'sb-testimonials'],
+          stylable: true,
+          testimonialsEyebrow: 'Client feedback',
+          testimonialsTitle: 'Testimonial cards for social proof and premium trust signals.',
+          testimonialsText:
+            'Drop this section anywhere on the page and update the quote copy from the right side panel.',
+          quoteOne:
+            '"The white layout finally made our catalog feel premium instead of crowded. Editing sections is much faster now."',
+          quoteOneName: 'Aarav Malhotra',
+          quoteOneRole: 'Founder, Northline Home',
+          quoteTwo:
+            '"We can drag a block, change the content in the sidebar, and publish a polished page without extra design work."',
+          quoteTwoName: 'Nisha Verma',
+          quoteTwoRole: 'Marketing Lead, Atelier One',
+          quoteThree:
+            '"The builder now feels more like a real page system instead of disconnected blocks. That helped our team a lot."',
+          quoteThreeName: 'Rohan Singh',
+          quoteThreeRole: 'Product Manager, Luma Retail',
+          traits: [
+            textTrait('testimonialsEyebrow', 'Eyebrow'),
+            textareaTrait('testimonialsTitle', 'Section title'),
+            textareaTrait('testimonialsText', 'Section text'),
+            textareaTrait('quoteOne', 'Quote 1'),
+            textTrait('quoteOneName', 'Quote 1 name'),
+            textTrait('quoteOneRole', 'Quote 1 role'),
+            textareaTrait('quoteTwo', 'Quote 2'),
+            textTrait('quoteTwoName', 'Quote 2 name'),
+            textTrait('quoteTwoRole', 'Quote 2 role'),
+            textareaTrait('quoteThree', 'Quote 3'),
+            textTrait('quoteThreeName', 'Quote 3 name'),
+            textTrait('quoteThreeRole', 'Quote 3 role'),
+          ],
+        },
+
+        init() {
+          bindRenderer(
+            this,
+            [
+              'testimonialsEyebrow',
+              'testimonialsTitle',
+              'testimonialsText',
+              'quoteOne',
+              'quoteOneName',
+              'quoteOneRole',
+              'quoteTwo',
+              'quoteTwoName',
+              'quoteTwoRole',
+              'quoteThree',
+              'quoteThreeName',
+              'quoteThreeRole',
+            ],
+            renderTestimonials,
+          );
+        },
+      },
+    });
+
+    components.addType('faq-section', {
+      model: {
+        defaults: {
+          name: 'FAQ Section',
+          tagName: 'section',
+          classes: ['sb-section', 'sb-faq'],
+          stylable: true,
+          faqEyebrow: 'Common questions',
+          faqTitle: 'FAQ cards for product, shipping, and service details.',
+          faqText:
+            'Use this section when visitors need reassurance before buying. The answers can be updated directly from the sidebar.',
+          faqOneQuestion: 'Can I reuse these sections on multiple pages?',
+          faqOneAnswer: 'Yes. Duplicate the blocks, drag them into other pages, and update the content from traits or inline text editing.',
+          faqTwoQuestion: 'Why were my section settings hard to edit before?',
+          faqTwoAnswer: 'The editor was still using the default loose layout. This setup gives traits and styles their own fixed right sidebar.',
+          faqThreeQuestion: 'Can I still style smaller elements inside a section?',
+          faqThreeAnswer: 'Yes. Select inner buttons, headings, or cards for styling, or select the section itself for content-level settings.',
+          traits: [
+            textTrait('faqEyebrow', 'Eyebrow'),
+            textareaTrait('faqTitle', 'Section title'),
+            textareaTrait('faqText', 'Section text'),
+            textTrait('faqOneQuestion', 'Question 1'),
+            textareaTrait('faqOneAnswer', 'Answer 1'),
+            textTrait('faqTwoQuestion', 'Question 2'),
+            textareaTrait('faqTwoAnswer', 'Answer 2'),
+            textTrait('faqThreeQuestion', 'Question 3'),
+            textareaTrait('faqThreeAnswer', 'Answer 3'),
+          ],
+        },
+
+        init() {
+          bindRenderer(
+            this,
+            [
+              'faqEyebrow',
+              'faqTitle',
+              'faqText',
+              'faqOneQuestion',
+              'faqOneAnswer',
+              'faqTwoQuestion',
+              'faqTwoAnswer',
+              'faqThreeQuestion',
+              'faqThreeAnswer',
+            ],
+            renderFaq,
+          );
+        },
+      },
+    });
+
+    components.addType('cta-banner', {
+      model: {
+        defaults: {
+          name: 'CTA Banner',
+          tagName: 'section',
+          classes: ['sb-section', 'sb-cta'],
+          stylable: true,
+          ctaEyebrow: 'Ready to launch',
+          ctaTitle: 'Add one final conversion block at the bottom of the page.',
+          ctaText:
+            'This section works well before the footer for signups, demos, product launches, or store entry points.',
+          ctaPrimary: 'Launch collection',
+          ctaSecondary: 'Talk to sales',
+          traits: [
+            textTrait('ctaEyebrow', 'Eyebrow'),
+            textareaTrait('ctaTitle', 'Banner title'),
+            textareaTrait('ctaText', 'Banner text'),
+            textTrait('ctaPrimary', 'Primary button'),
+            textTrait('ctaSecondary', 'Secondary button'),
+          ],
+        },
+
+        init() {
+          bindRenderer(this, ['ctaEyebrow', 'ctaTitle', 'ctaText', 'ctaPrimary', 'ctaSecondary'], renderCtaBanner);
+        },
+      },
+    });
+
+    components.addType('site-footer', {
+      model: {
+        defaults: {
+          name: 'Footer',
+          tagName: 'footer',
+          classes: ['sb-section', 'sb-footer'],
+          stylable: true,
+          footerInitials: 'LUX',
+          footerBrand: 'Luma Studio',
+          footerTagline: 'Minimal commerce pages with calm hierarchy',
+          footerText:
+            'Build polished storefront pages faster with reusable sections, subtle depth, and a quiet white palette that keeps your products at the center.',
+          footerMetaLeft: 'Designed for a calm, premium builder experience.',
+          footerMetaRight: '2026 Luma Studio. All rights reserved.',
+          col1Title: 'Navigate',
+          col1Links: [
+            { label: 'Shop', url: '#' },
+            { label: 'Collections', url: '#' },
+            { label: 'Journal', url: '#' },
+            { label: 'Support', url: '#' }
+          ],
+          col2Title: 'Company',
+          col2Links: [
+            { label: 'About', url: '#' },
+            { label: 'Studio visits', url: '#' },
+            { label: 'Careers', url: '#' },
+            { label: 'Contact', url: '#' }
+          ],
+          col3Title: 'Visit',
+          col3Text1: '12 Horizon Lane',
+          col3Text2: 'New Delhi, India',
+          col3Text3: 'hello@lumastudio.dev',
+          traits: [
+            textTrait('footerInitials', 'Brand mark'),
+            textTrait('footerBrand', 'Brand name'),
+            textTrait('footerTagline', 'Tagline'),
+            textareaTrait('footerText', 'Footer text'),
+            textTrait('col1Title', 'Col 1 title'),
+            { type: 'dynamic-list', name: 'col1Links', label: 'Col 1 links' },
+            textTrait('col2Title', 'Col 2 title'),
+            { type: 'dynamic-list', name: 'col2Links', label: 'Col 2 links' },
+            textTrait('col3Title', 'Col 3 title'),
+            textTrait('col3Text1', 'Col 3 text 1'),
+            textTrait('col3Text2', 'Col 3 text 2'),
+            textTrait('col3Text3', 'Col 3 text 3'),
+            textTrait('footerMetaLeft', 'Meta left'),
+            textTrait('footerMetaRight', 'Meta right'),
+          ],
+        },
+
+        init() {
+          bindRenderer(
+            this,
+            ['footerInitials', 'footerBrand', 'footerTagline', 'footerText', 'footerMetaLeft', 'footerMetaRight', 'col1Title', 'col1Links', 'col2Title', 'col2Links', 'col3Title', 'col3Text1', 'col3Text2', 'col3Text3'],
+            renderFooter,
+          );
+        },
+      },
+    });
+
+    components.addType('custom-list', {
+      model: {
+        defaults: {
+          name: 'List Block',
+          tagName: 'div',
+          classes: ['sb-custom-list'],
+          stylable: true,
+          listItems: [
+            { label: 'List item 1', url: '' },
+            { label: 'List item 2', url: '' },
+            { label: 'List item 3', url: '' }
+          ],
+          listCta: '',
+          listCtaLink: '#',
+          traits: [
+            { type: 'dynamic-list', name: 'listItems', label: 'List items' },
+            textTrait('listCta', 'CTA button'),
+            textTrait('listCtaLink', 'CTA URL'),
+          ],
+        },
+
+        init() {
+          bindRenderer(
+            this,
+            ['listItems', 'listCta', 'listCtaLink'],
+            renderCustomList,
+          );
+        },
+      },
+    });
+
+    blocks.add('site-header', {
+      label: blockLabel('HD', 'Header', 'Brand, links, and call to action'),
+      category: sectionCategory,
+      select: true,
+      content: { type: 'site-header' },
+    });
+
+    blocks.add('hero-section', {
+      label: blockLabel('HR', 'Hero', 'Big headline and conversion area'),
+      category: sectionCategory,
+      select: true,
+      content: { type: 'hero-section' },
+    });
+
+    blocks.add('feature-grid', {
+      label: blockLabel('FG', 'Features Grid', 'Three-card benefits section'),
+      category: sectionCategory,
+      select: true,
+      content: { type: 'feature-grid' },
+    });
+
+    blocks.add('products-section', {
+      label: blockLabel('PG', 'Products Grid', 'Three polished product cards'),
+      category: commerceCategory,
+      select: true,
+      content: { type: 'products-section' },
+    });
+
+    blocks.add('product-card', {
+      label: blockLabel('PC', 'Product Card', 'Single card with editable traits'),
+      category: commerceCategory,
+      select: true,
+      content: { type: 'product-card' },
+    });
+
+    blocks.add('feature-carousel', {
+      label: blockLabel('CR', 'Carousel', 'Sliding campaign showcase'),
+      category: sectionCategory,
+      select: true,
+      content: { type: 'feature-carousel' },
+    });
+
+    blocks.add('testimonials-section', {
+      label: blockLabel('TS', 'Testimonials', 'Three clean quote cards'),
+      category: sectionCategory,
+      select: true,
+      content: { type: 'testimonials-section' },
+    });
+
+    blocks.add('faq-section', {
+      label: blockLabel('FQ', 'FAQ', 'Question and answer cards'),
+      category: sectionCategory,
+      select: true,
+      content: { type: 'faq-section' },
+    });
+
+    blocks.add('cta-banner', {
+      label: blockLabel('CT', 'CTA Banner', 'Bottom conversion section'),
+      category: sectionCategory,
+      select: true,
+      content: { type: 'cta-banner' },
+    });
+
+    blocks.add('site-footer', {
+      label: blockLabel('FT', 'Footer', 'Soft multi-column footer'),
+      category: sectionCategory,
+      select: true,
+      content: { type: 'site-footer' },
+    });
+
+    const basicCategory = { id: 'basic', label: 'Basic Elements', open: true };
+
+    blocks.add('text', {
+      label: blockLabel('TXT', 'Text', 'Insert simple text'),
+      category: basicCategory,
+      content: {
+        type: 'text',
+        content: 'Insert your text here',
+        style: { padding: '10px' },
+        activeOnRender: 1
+      }
+    });
+
+    blocks.add('link', {
+      label: blockLabel('LNK', 'Link', 'Insert a link'),
+      category: basicCategory,
+      content: {
+        type: 'link',
+        content: 'Link',
+        style: { color: '#0f766e' }
+      }
+    });
+
+    blocks.add('image', {
+      label: blockLabel('IMG', 'Image', 'Insert an image'),
+      category: basicCategory,
+      content: {
+        type: 'image',
+        style: { color: 'black' }
+      }
+    });
+
+    blocks.add('video', {
+      label: blockLabel('VID', 'Video', 'Insert a video player'),
+      category: basicCategory,
+      content: {
+        type: 'video',
+        src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        style: { height: '350px', width: '100%' }
+      }
+    });
+
+    blocks.add('button', {
+      label: blockLabel('BTN', 'Button', 'Insert a CTA button'),
+      category: basicCategory,
+      content: '<a class="sb-button sb-button--primary" href="#">Click me</a>'
+    });
+
+    blocks.add('divider', {
+      label: blockLabel('DIV', 'Divider', 'Insert a horizontal line'),
+      category: basicCategory,
+      content: '<hr style="border: none; border-top: 1px solid #e7e5e4; margin: 20px 0;" />'
+    });
+
+    blocks.add('list', {
+      label: blockLabel('LST', 'List Items', 'Insert a bullet list'),
+      category: basicCategory,
+      select: true,
+      content: { type: 'custom-list' }
+    });
+
+    blocks.add('section-1', {
+      label: blockLabel('S1', '1 Section', 'Single column block'),
+      category: basicCategory,
+      content: `
+        <div style="padding: 20px; display: block; border: 1px dashed rgba(0,0,0,0.1);">
+          <div style="min-height: 50px;"></div>
+        </div>
+      `
+    });
+
+    blocks.add('section-1-3', {
+      label: blockLabel('S3', '1/3 Section', 'Three columns block'),
+      category: basicCategory,
+      content: `
+        <div style="display: flex; flex-wrap: wrap; padding: 20px; gap: 20px; border: 1px dashed rgba(0,0,0,0.1);">
+          <div style="flex: 1; min-height: 50px; border: 1px dashed rgba(0,0,0,0.05);"></div>
+          <div style="flex: 1; min-height: 50px; border: 1px dashed rgba(0,0,0,0.05);"></div>
+          <div style="flex: 1; min-height: 50px; border: 1px dashed rgba(0,0,0,0.05);"></div>
+        </div>
+      `
+    });
+
+    const emailCategory = { id: 'email', label: 'Email Tags', open: true };
+Tags', open: true };
+Tags', open: true };
+Tags', open: true };
+
+    blocks.add('tag-name', {
+      label: blockLabel('NM', 'Name', 'Insert {{name}} variable'),
+      category: emailCategory,
+      content: '{{name}}',
+    });
+
+    blocks.add('tag-email', {
+      label: blockLabel('EM', 'Email', 'Insert {{email}} variable'),
+      category: emailCategory,
+      content: '{{email}}',
+    });
+
+    blocks.add('tag-unsubscribe', {
+      label: blockLabel('UN', 'Unsubscribe', 'Unsubscribe link'),
+      category: emailCategory,
+      content: '<a href="{{unsubscribe_url}}" style="color: #6b7280; text-decoration: underline; font-size: 12px;">Unsubscribe</a>',
+    });
+  };
+
+  minimalBuilderPlugin.canvasCss = canvasCss;
+  minimalBuilderPlugin.emailTemplates = emailTemplates;
+  minimalBuilderPlugin.styleManagerSectors = styleManagerSectors;
+
+  global.grapesjsMinimalBuilder = minimalBuilderPlugin;
+})(typeof globalThis !== 'undefined' ? globalThis : window);

@@ -1,0 +1,2138 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Email Template Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Manrope:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="dist/css/grapes.min.css" />
+  <script src="grapes.min.js"></script>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      --gjs-main-color: #ffffff;
+      --gjs-primary-color: #ffffff;
+      --gjs-secondary-color: #111827;
+      --gjs-tertiary-color: #e7e5e4;
+      --gjs-quaternary-color: #0f172a;
+      --gjs-font-color: #334155;
+      --gjs-font-color-active: #111827;
+      --gjs-main-dark-color: rgba(15, 23, 42, 0.08);
+      --gjs-secondary-dark-color: rgba(15, 23, 42, 0.04);
+      --gjs-main-light-color: rgba(255, 255, 255, 0.85);
+      --gjs-secondary-light-color: rgba(15, 23, 42, 0.68);
+      --gjs-soft-light-color: rgba(148, 163, 184, 0.08);
+      --gjs-color-blue: #2563eb;
+      --gjs-color-red: #dc2626;
+      --gjs-color-yellow: #f59e0b;
+      --gjs-color-green: #10b981;
+      --gjs-color-highlight: #0f766e;
+      --gjs-color-warn: #f59e0b;
+      --gjs-light-border: rgba(15, 23, 42, 0.08);
+      --gjs-arrow-color: rgba(15, 23, 42, 0.45);
+      --gjs-dark-text-shadow: rgba(15, 23, 42, 0.08);
+      --gjs-main-font: 'Segoe UI', 'Helvetica Neue', sans-serif;
+      --gjs-font-size: 13px;
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.95), transparent 32%),
+        linear-gradient(180deg, #f8f7f4 0%, #f1efeb 100%);
+      color: #111827;
+      overflow: hidden;
+    }
+
+    .builder-shell {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      height: 100%;
+    }
+
+    .builder-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(18px);
+    }
+
+    .builder-topbar__brand {
+      display: grid;
+      gap: 2px;
+    }
+
+    .builder-topbar__brand strong {
+      font-size: 15px;
+      letter-spacing: 0.04em;
+    }
+
+    .builder-topbar__brand span,
+    .builder-topbar__hint {
+      color: #57534e;
+      font-size: 13px;
+    }
+
+    .builder-topbar__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .builder-button,
+    .builder-select {
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      background: #ffffff;
+      color: #111827;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .builder-button--primary {
+      background: #111827;
+      color: #ffffff;
+      border-color: #111827;
+    }
+
+    .builder-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      color: #57534e;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .builder-status::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #94a3b8;
+    }
+
+    .builder-status[data-state='saving']::before {
+      background: #f59e0b;
+    }
+
+    .builder-status[data-state='saved']::before {
+      background: #10b981;
+    }
+
+    .builder-status[data-state='error']::before {
+      background: #dc2626;
+    }
+
+    .builder-workspace {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr) 360px;
+      min-height: 0;
+    }
+
+    .builder-sidebar,
+    .builder-canvas {
+      min-height: 0;
+    }
+
+    .builder-sidebar {
+      padding: 16px;
+      display: grid;
+      gap: 16px;
+      overflow: auto;
+    }
+
+    .builder-sidebar--left {
+      border-right: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .builder-sidebar--right {
+      border-left: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .builder-panel {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      min-height: 0;
+      border: 1px solid rgba(231, 229, 228, 0.95);
+      border-radius: 26px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 24px 56px rgba(15, 23, 42, 0.07);
+      overflow: hidden;
+    }
+
+    .builder-panel__header {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(250, 249, 247, 0.92));
+    }
+
+    .builder-panel__header strong {
+      display: block;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+    }
+
+    .builder-panel__header span {
+      display: block;
+      margin-top: 4px;
+      color: #78716c;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .builder-panel__content {
+      min-height: 0;
+      overflow: auto;
+    }
+
+    .builder-panel__content--fill {
+      display: grid;
+    }
+
+    .builder-canvas {
+      min-width: 0;
+      padding: 0;
+    }
+
+    .builder-canvas__frame {
+      height: 100%;
+      min-height: 0;
+      border-left: 1px solid rgba(231, 229, 228, 0.95);
+      border-right: 1px solid rgba(231, 229, 228, 0.95);
+      border-radius: 0;
+      background: rgba(255, 255, 255, 1);
+      overflow: hidden;
+    }
+
+    #gjs {
+      height: 100%;
+      width: 100%;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    .gjs-editor,
+    .gjs-one-bg,
+    .gjs-two-color,
+    .gjs-three-bg,
+    .gjs-four-color {
+      color: inherit;
+    }
+
+    .gjs-editor {
+      background: transparent;
+    }
+
+    .gjs-cv-canvas {
+      width: 100%;
+
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(248, 247, 244, 0.92)),
+        linear-gradient(135deg, rgba(203, 213, 225, 0.18), transparent 40%);
+    }
+
+    .gjs-blocks-c,
+    .gjs-sm-sectors,
+    .gjs-trt-traits,
+    .gjs-layers,
+    .gjs-clm-tags {
+      background: transparent;
+    }
+
+    .gjs-block-category,
+    .gjs-sm-sector,
+    .gjs-trt-trait,
+    .gjs-layer {
+      border-color: rgba(15, 23, 42, 0.08);
+    }
+
+    .gjs-block-category {
+      border-bottom: 1px solid rgba(15, 23, 42, 0.07);
+    }
+
+    .gjs-title,
+    .gjs-sm-sector-title,
+    .gjs-layer-title,
+    .gjs-trt-trait__label {
+      letter-spacing: 0.02em;
+    }
+
+    .gjs-block {
+      margin: 12px;
+      padding: 12px;
+      border: 1px solid rgba(15, 23, 42, 0.07);
+      border-radius: 20px;
+      background: linear-gradient(180deg, #ffffff 0%, #fbfaf8 100%);
+      box-shadow: 0 16px 32px rgba(15, 23, 42, 0.05);
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+    }
+
+    .gjs-block:hover {
+      transform: translateY(-2px);
+      border-color: rgba(37, 99, 235, 0.22);
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+    }
+
+    .gjs-field,
+    .gjs-input-holder input,
+    .gjs-input-holder select,
+    .gjs-input-holder textarea {
+      border-radius: 12px;
+    }
+
+    .gjs-sm-sectors .gjs-sm-sector,
+    .gjs-trt-traits .gjs-trt-trait,
+    .gjs-layer {
+      background: rgba(255, 255, 255, 0.66);
+    }
+
+    .sb-trait-asset {
+      display: grid;
+      gap: 10px;
+    }
+
+    .sb-trait-asset__row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .sb-trait-asset__input {
+      width: 100%;
+    }
+
+    .sb-trait-asset__button {
+      padding: 9px 12px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 12px;
+      background: #111827;
+      color: #ffffff;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .sb-trait-asset__preview {
+      min-height: 88px;
+      border: 1px dashed rgba(15, 23, 42, 0.16);
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 247, 244, 0.92));
+      color: #78716c;
+      font-size: 12px;
+    }
+
+    .sb-trait-asset__preview:empty::before {
+      content: attr(data-empty);
+    }
+
+    .sb-trait-asset__preview img {
+      display: block;
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+    }
+
+    .builder-note {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+      background: rgba(248, 247, 244, 0.9);
+      color: #57534e;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .builder-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(15, 23, 42, 0.42);
+      z-index: 1000;
+    }
+
+    .builder-modal.open {
+      display: flex;
+    }
+
+    .builder-modal__content {
+      width: min(760px, 100%);
+      max-height: min(86vh, 920px);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+      border-radius: 28px;
+      background: #ffffff;
+      box-shadow: 0 32px 90px rgba(15, 23, 42, 0.24);
+    }
+
+    .builder-modal__content--wide {
+      width: min(980px, 100%);
+    }
+
+    .builder-modal__header,
+    .builder-modal__footer {
+      padding: 18px 20px;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .builder-modal__footer {
+      border-bottom: 0;
+      border-top: 1px solid rgba(15, 23, 42, 0.08);
+      flex-wrap: wrap;
+    }
+
+    .builder-modal__header h2 {
+      margin: 0;
+      font-size: 20px;
+      color: #111827;
+    }
+
+    .builder-modal__header p,
+    .builder-modal__hint {
+      margin: 6px 0 0;
+      color: #57534e;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .builder-modal__close {
+      width: 38px;
+      height: 38px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 999px;
+      background: #ffffff;
+      color: #111827;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .template-grid {
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      overflow: auto;
+    }
+
+    .template-card {
+      padding: 20px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 22px;
+      background: linear-gradient(180deg, #ffffff 0%, #faf8f5 100%);
+      cursor: pointer;
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+    }
+
+    .template-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(37, 99, 235, 0.24);
+      box-shadow: 0 22px 44px rgba(15, 23, 42, 0.08);
+    }
+
+    .template-card h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+      color: #111827;
+    }
+
+    .template-card p {
+      margin: 0;
+      color: #57534e;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .export-code {
+      width: 100%;
+      height: 100%;
+      padding: 20px;
+      border: 0;
+      resize: none;
+      font: 12px/1.65 Consolas, 'Courier New', monospace;
+      color: #0f172a;
+      background: #f8fafc;
+      box-sizing: border-box;
+    }
+
+    .builder-toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      min-width: 240px;
+      max-width: min(420px, calc(100vw - 44px));
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #111827;
+      color: #ffffff;
+      box-shadow: 0 20px 44px rgba(15, 23, 42, 0.26);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+      transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+      z-index: 1100;
+    }
+
+    .builder-toast.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Shadcn-inspired builder refresh */
+    body {
+      --background: #f8fafc;
+      --foreground: #0f172a;
+      --muted: #64748b;
+      --muted-soft: #94a3b8;
+      --card: rgba(255, 255, 255, 0.92);
+      --card-strong: #ffffff;
+      --border: rgba(148, 163, 184, 0.22);
+      --border-strong: rgba(148, 163, 184, 0.34);
+      --primary: #4f46e5;
+      --primary-strong: #4338ca;
+      --primary-soft: rgba(79, 70, 229, 0.1);
+      --success: #10b981;
+      --shadow-soft: 0 18px 46px rgba(15, 23, 42, 0.08);
+      --shadow-strong: 0 28px 80px rgba(15, 23, 42, 0.12);
+      --gjs-main-color: #ffffff;
+      --gjs-primary-color: #ffffff;
+      --gjs-secondary-color: #0f172a;
+      --gjs-tertiary-color: #6366f1;
+      --gjs-quaternary-color: #4338ca;
+      --gjs-font-color: #334155;
+      --gjs-font-color-active: #0f172a;
+      --gjs-main-dark-color: rgba(148, 163, 184, 0.16);
+      --gjs-secondary-dark-color: rgba(248, 250, 252, 0.9);
+      --gjs-main-light-color: rgba(99, 102, 241, 0.08);
+      --gjs-secondary-light-color: rgba(15, 23, 42, 0.72);
+      --gjs-soft-light-color: rgba(99, 102, 241, 0.06);
+      --gjs-color-blue: #4f46e5;
+      --gjs-color-highlight: #4f46e5;
+      --gjs-light-border: rgba(148, 163, 184, 0.22);
+      --gjs-arrow-color: rgba(71, 85, 105, 0.55);
+      --gjs-main-font: 'Manrope', 'Segoe UI', sans-serif;
+      --gjs-font-size: 13px;
+      font-family: 'Manrope', 'Segoe UI', sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(99, 102, 241, 0.16), transparent 24%),
+        radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.1), transparent 20%),
+        linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+      color: var(--foreground);
+    }
+
+    code {
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      font-size: 11px;
+      padding: 0 0.35rem;
+      border-radius: 999px;
+      background: rgba(226, 232, 240, 0.72);
+      color: var(--foreground);
+    }
+
+    .builder-shell {
+      gap: 18px;
+      padding: 18px;
+      box-sizing: border-box;
+    }
+
+    .builder-topbar {
+      padding: 16px 18px;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.86);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .builder-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .builder-brand__logo {
+      width: 46px;
+      height: 46px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at top left, rgba(129, 140, 248, 0.9), rgba(79, 70, 229, 1)),
+        linear-gradient(180deg, #6366f1 0%, #4338ca 100%);
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      box-shadow: 0 16px 34px rgba(79, 70, 229, 0.32);
+      flex-shrink: 0;
+    }
+
+    .builder-brand__copy {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .builder-brand__copy strong {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--foreground);
+    }
+
+    .builder-brand__copy span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+      max-width: 440px;
+    }
+
+    .builder-topbar__actions {
+      gap: 10px;
+    }
+
+    .builder-toolbar-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px;
+      border: 1px solid rgba(226, 232, 240, 0.88);
+      border-radius: 18px;
+      background: rgba(248, 250, 252, 0.9);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    }
+
+    .builder-button,
+    .builder-select {
+      min-height: 40px;
+      padding: 0 14px;
+      border-radius: 14px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--foreground);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+    }
+
+    .builder-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .builder-button__icon,
+    .builder-select-wrap__icon {
+      width: 15px;
+      height: 15px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: currentColor;
+      flex-shrink: 0;
+    }
+
+    .builder-button__icon svg,
+    .builder-select-wrap__icon svg,
+    .builder-search__icon svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .builder-button:hover,
+    .builder-select:hover {
+      background: rgba(255, 255, 255, 0.92);
+      border-color: rgba(148, 163, 184, 0.2);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .builder-button:active,
+    .builder-select:active {
+      transform: translateY(0);
+    }
+
+    .builder-button--primary {
+      background: linear-gradient(180deg, #6366f1 0%, #4338ca 100%);
+      color: #ffffff;
+      border-color: rgba(79, 70, 229, 0.3);
+      box-shadow: 0 12px 28px rgba(79, 70, 229, 0.28);
+    }
+
+    .builder-button--primary:hover {
+      background: linear-gradient(180deg, #5b58f6 0%, #3f35c9 100%);
+      color: #ffffff;
+    }
+
+    .builder-select-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .builder-select-wrap__icon {
+      position: absolute;
+      left: 12px;
+      pointer-events: none;
+      color: var(--muted);
+    }
+
+    .builder-select {
+      appearance: none;
+      padding-left: 34px;
+      padding-right: 34px;
+      min-width: 132px;
+    }
+
+    .builder-status {
+      min-height: 40px;
+      padding: 0 14px;
+      background: #ffffff;
+      border-color: rgba(148, 163, 184, 0.18);
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .builder-workspace {
+      grid-template-columns: 320px minmax(0, 1fr) 380px;
+      gap: 18px;
+    }
+
+    .builder-sidebar {
+      padding: 0;
+      gap: 18px;
+      overflow: hidden;
+    }
+
+    .builder-sidebar--left,
+    .builder-sidebar--right {
+      border: 0;
+    }
+
+    .builder-sidebar--left {
+      grid-template-rows: minmax(0, 1fr) auto;
+    }
+
+    .builder-sidebar--right {
+      grid-template-rows: minmax(0, 1fr);
+    }
+
+    .builder-panel {
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      background: var(--card);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(18px);
+    }
+
+    .builder-panel--library,
+    .builder-panel--inspector {
+      height: 100%;
+    }
+
+    .builder-panel--compact {
+      min-height: auto;
+    }
+
+    .builder-panel__header {
+      padding: 18px 20px 16px;
+      border-bottom: 1px solid rgba(226, 232, 240, 0.76);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.78) 100%);
+    }
+
+    .builder-panel__header strong {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--foreground);
+    }
+
+    .builder-panel__header span {
+      margin-top: 6px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    .builder-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(79, 70, 229, 0.08);
+      color: var(--primary-strong);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .builder-panel__toolbar {
+      display: grid;
+      gap: 12px;
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(226, 232, 240, 0.72);
+      background: rgba(248, 250, 252, 0.78);
+    }
+
+    .builder-search {
+      position: relative;
+      display: flex;
+      align-items: center;
+      min-height: 48px;
+      padding: 0 14px;
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      border-radius: 16px;
+      background: #ffffff;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86);
+    }
+
+    .builder-search:focus-within {
+      border-color: rgba(79, 70, 229, 0.38);
+      box-shadow:
+        0 0 0 4px rgba(79, 70, 229, 0.08),
+        0 8px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    .builder-search__icon {
+      width: 16px;
+      height: 16px;
+      color: var(--muted-soft);
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+
+    .builder-search input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--foreground);
+      font: inherit;
+    }
+
+    .builder-search input::placeholder {
+      color: var(--muted-soft);
+    }
+
+    .builder-chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .builder-chip {
+      min-height: 34px;
+      padding: 0 12px;
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.84);
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .builder-chip:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    .builder-chip.is-active {
+      background: rgba(79, 70, 229, 0.1);
+      border-color: rgba(79, 70, 229, 0.18);
+      color: var(--primary-strong);
+    }
+
+    .builder-panel__content--library {
+      padding: 18px;
+    }
+
+    .builder-note {
+      padding: 14px 16px;
+      border: 1px solid rgba(226, 232, 240, 0.82);
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.92) 100%);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .builder-canvas {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 14px;
+      min-height: 0;
+    }
+
+    .builder-canvas__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 20px;
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.84);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .builder-canvas__header strong {
+      display: block;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--foreground);
+    }
+
+    .builder-canvas__header span:last-child,
+    .builder-canvas__header>div:first-child>span:last-child {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .builder-canvas__meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .builder-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: rgba(79, 70, 229, 0.1);
+      color: var(--primary-strong);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .builder-pill--soft {
+      background: rgba(248, 250, 252, 0.96);
+      color: var(--muted);
+      border: 1px solid rgba(226, 232, 240, 0.95);
+    }
+
+    .builder-canvas__frame {
+      border: 1px solid var(--border);
+      border-radius: 32px;
+      background:
+        radial-gradient(circle at top left, rgba(79, 70, 229, 0.08), transparent 26%),
+        linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%);
+      box-shadow: var(--shadow-strong);
+      overflow: hidden;
+    }
+
+    .builder-canvas__stage {
+      height: 100%;
+      padding: 26px;
+      box-sizing: border-box;
+      background-image: radial-gradient(rgba(148, 163, 184, 0.28) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    #gjs {
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.36);
+    }
+
+    .builder-panel--inspector {
+      grid-template-rows: auto auto minmax(0, 1fr);
+    }
+
+    .builder-tab-list {
+      display: flex;
+      gap: 8px;
+      padding: 14px 20px 0;
+      border-bottom: 1px solid rgba(226, 232, 240, 0.72);
+      background: rgba(248, 250, 252, 0.82);
+    }
+
+    .builder-tab-trigger {
+      min-height: 40px;
+      padding: 0 14px;
+      border: 1px solid transparent;
+      border-radius: 14px;
+      background: transparent;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .builder-tab-trigger.is-active {
+      background: #ffffff;
+      color: var(--primary-strong);
+      border-color: rgba(79, 70, 229, 0.14);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .builder-tab-panels {
+      min-height: 0;
+      display: grid;
+    }
+
+    .builder-tab-panel {
+      min-height: 0;
+      display: none;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 14px;
+      padding: 16px 20px 20px;
+    }
+
+    .builder-tab-panel.is-active {
+      display: grid;
+    }
+
+    .gjs-editor,
+    .gjs-one-bg,
+    .gjs-two-color,
+    .gjs-three-bg,
+    .gjs-four-color {
+      color: inherit;
+    }
+
+    .gjs-editor {
+      background: transparent;
+    }
+
+    .gjs-cv-canvas {
+      width: 100%;
+      top: 0;
+      height: 100%;
+      background: transparent;
+    }
+
+    .gjs-cv-canvas__frames {
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .gjs-frame-wrapper {
+      box-sizing: border-box;
+      padding: 20px 14px 30px;
+    }
+
+    .gjs-frame {
+      border: 1px solid rgba(226, 232, 240, 0.96);
+      border-radius: 28px;
+      box-shadow: 0 30px 80px rgba(15, 23, 42, 0.14);
+      background: #ffffff;
+    }
+
+    .gjs-cv-canvas .gjs-highlighter,
+    .gjs-cv-canvas .gjs-highlighter-sel {
+      outline-color: rgba(79, 70, 229, 0.95);
+      border-radius: 14px;
+    }
+
+    .gjs-cv-canvas .gjs-highlighter-sel {
+      outline-width: 2px;
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.14);
+    }
+
+    .gjs-toolbar {
+      background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%);
+      border-radius: 999px;
+      padding: 4px;
+      box-shadow: 0 16px 36px rgba(79, 70, 229, 0.28);
+    }
+
+    .gjs-toolbar-item {
+      width: 30px;
+      padding: 7px;
+      border-radius: 999px;
+    }
+
+    .gjs-toolbar-item:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .gjs-badge {
+      border-radius: 999px;
+      padding: 5px 10px;
+      background: #0f172a;
+      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.18);
+    }
+
+    .gjs-resizer-h {
+      border-color: var(--primary);
+      border-radius: 999px;
+      box-shadow: 0 8px 18px rgba(79, 70, 229, 0.16);
+    }
+
+    .gjs-block-category {
+      border: 0;
+      background: transparent;
+      overflow: visible;
+    }
+
+    .gjs-block-category .gjs-title {
+      padding: 0 0 12px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    #blocks .gjs-block-categories,
+    #blocks .gjs-blocks-no-cat .gjs-blocks-c {
+      display: grid;
+      gap: 18px;
+    }
+
+    #blocks .gjs-blocks-c {
+      display: grid;
+      gap: 14px;
+    }
+
+    .gjs-block {
+      margin: 0;
+      padding: 16px;
+      border: 1px solid rgba(226, 232, 240, 0.98);
+      border-radius: 24px;
+      background:
+        linear-gradient(180deg, #ffffff 0%, rgba(248, 250, 252, 0.96) 100%);
+      box-shadow: 0 18px 38px rgba(15, 23, 42, 0.06);
+    }
+
+    .gjs-block:hover {
+      border-color: rgba(79, 70, 229, 0.2);
+      box-shadow: 0 24px 48px rgba(15, 23, 42, 0.1);
+    }
+
+    .gjs-block-label {
+      display: grid;
+      gap: 14px;
+      text-align: left;
+    }
+
+    .gjs-block-label__preview {
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr);
+      gap: 12px;
+      align-items: stretch;
+      padding: 12px;
+      border-radius: 18px;
+      background:
+        linear-gradient(180deg, rgba(99, 102, 241, 0.08) 0%, rgba(248, 250, 252, 0.92) 100%);
+      border: 1px solid rgba(226, 232, 240, 0.95);
+    }
+
+    .gjs-block-label__badge {
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%);
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      box-shadow: 0 12px 26px rgba(79, 70, 229, 0.22);
+    }
+
+    .gjs-block-label__wire {
+      display: grid;
+      align-content: center;
+      gap: 8px;
+    }
+
+    .gjs-block-label__line,
+    .gjs-block-label__chip {
+      display: block;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.24);
+      height: 9px;
+    }
+
+    .gjs-block-label__line--lg {
+      width: 82%;
+      background: rgba(79, 70, 229, 0.2);
+    }
+
+    .gjs-block-label__line {
+      width: 58%;
+    }
+
+    .gjs-block-label__chip {
+      width: 34%;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(226, 232, 240, 0.95);
+    }
+
+    .gjs-block-label__meta {
+      display: grid;
+      gap: 6px;
+    }
+
+    .gjs-block-label__title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--foreground);
+      letter-spacing: -0.02em;
+    }
+
+    .gjs-block-label__copy {
+      font-size: 12px;
+      line-height: 1.65;
+      color: var(--muted);
+    }
+
+    .gjs-sm-sector,
+    .gjs-layer,
+    .gjs-trt-trait {
+      border: 1px solid rgba(226, 232, 240, 0.96);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.9);
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .gjs-sm-sector-title,
+    .gjs-layer-title,
+    .gjs-trt-trait__label {
+      background: transparent;
+      border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+      color: var(--foreground);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 14px 16px;
+    }
+
+    .gjs-sm-properties,
+    .gjs-sm-sector .gjs-fields,
+    .gjs-trt-traits,
+    .gjs-layer-children,
+    .gjs-block-category.gjs-open>.gjs-blocks-c {
+      background: transparent;
+    }
+
+    .gjs-trt-trait {
+      display: grid;
+      gap: 10px;
+      padding: 14px 16px;
+      align-items: start;
+    }
+
+    .gjs-label-wrp {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .gjs-field-wrp {
+      width: 100%;
+    }
+
+    .gjs-field,
+    .gjs-input-holder input,
+    .gjs-input-holder select,
+    .gjs-input-holder textarea {
+      min-height: 42px;
+      border: 1px solid rgba(226, 232, 240, 0.96);
+      border-radius: 14px;
+      background: #f8fafc;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+
+    .gjs-input-holder input,
+    .gjs-input-holder select,
+    .gjs-input-holder textarea {
+      color: var(--foreground);
+      font-family: inherit;
+      padding: 9px 12px;
+    }
+
+    .gjs-field input,
+    .gjs-field select,
+    .gjs-field textarea,
+    .gjs-input-holder input:focus,
+    .gjs-input-holder select:focus,
+    .gjs-input-holder textarea:focus {
+      outline: none;
+      box-shadow: none;
+    }
+
+    .gjs-four-color,
+    .gjs-three-color,
+    .gjs-color-active,
+    .gjs-color-hl {
+      color: var(--foreground);
+    }
+
+    .gjs-clm-tags,
+    .gjs-layers,
+    .gjs-sm-sectors,
+    .gjs-trt-traits {
+      padding: 0;
+    }
+
+    .gjs-layer {
+      padding: 0;
+    }
+
+    .gjs-layer-title {
+      padding: 12px 16px;
+    }
+
+    .gjs-layer-caret,
+    .gjs-title .gjs-caret-icon {
+      color: var(--muted);
+    }
+
+    .sb-trait-asset__button {
+      background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%);
+      border-color: rgba(79, 70, 229, 0.28);
+      box-shadow: 0 12px 26px rgba(79, 70, 229, 0.22);
+    }
+
+    .export-code {
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+    }
+
+    .template-card {
+      border-radius: 24px;
+      background:
+        radial-gradient(circle at top left, rgba(79, 70, 229, 0.08), transparent 26%),
+        linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    @media (max-width: 1280px) {
+      .builder-workspace {
+        grid-template-columns: 290px minmax(0, 1fr) 340px;
+      }
+    }
+
+    @media (max-width: 1080px) {
+      .builder-shell {
+        padding: 14px;
+      }
+
+      .builder-topbar,
+      .builder-canvas__header {
+        border-radius: 24px;
+      }
+
+      .builder-workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .builder-brand {
+        width: 100%;
+      }
+
+      .builder-topbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .builder-topbar__actions {
+        justify-content: flex-start;
+      }
+
+      .builder-canvas__header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .builder-sidebar--left {
+        order: 2;
+      }
+
+      .builder-canvas {
+        order: 1;
+        padding-bottom: 0;
+      }
+
+      .builder-sidebar--right {
+        order: 3;
+      }
+
+      .builder-tab-list {
+        overflow: auto;
+      }
+
+      .builder-toolbar-group {
+        flex-wrap: wrap;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .builder-shell {
+        gap: 14px;
+      }
+
+      .builder-topbar,
+      .builder-panel,
+      .builder-canvas__header,
+      .builder-canvas__frame {
+        border-radius: 22px;
+      }
+
+      .builder-panel__header,
+      .builder-panel__toolbar,
+      .builder-tab-panel {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .builder-canvas__stage {
+        padding: 14px;
+      }
+
+      .builder-button,
+      .builder-select,
+      .builder-status {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .builder-select-wrap {
+        width: 100%;
+      }
+
+      .builder-select {
+        width: 100%;
+      }
+
+      .builder-toolbar-group {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- <div class="builder-shell">
+    <div class="builder-topbar">
+      <div class="builder-brand">
+        <div class="builder-brand__logo">ES</div>
+        <div class="builder-brand__copy">
+          <strong>Email Studio</strong>
+          <span>Polished builder shell for production-ready email templates and export</span>
+        </div>
+      </div>
+      <div class="builder-topbar__actions">
+        <div class="builder-toolbar-group">
+          <span id="save-status" class="builder-status" data-state="saved">Autosave ready</span>
+        </div>
+        <div class="builder-toolbar-group">
+          <button id="btn-store" class="builder-button">
+            <span class="builder-button__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M3 7h18" />
+                <path d="M7 3h10" />
+                <rect x="4" y="7" width="16" height="13" rx="3" />
+                <path d="M8 12h8" />
+              </svg>
+            </span>
+            <span>Templates</span>
+          </button>
+          <label class="builder-select-wrap">
+            <span class="builder-select-wrap__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                stroke-linejoin="round">
+                <rect x="3.5" y="4.5" width="17" height="11" rx="2.5" />
+                <path d="M8 19.5h8" />
+              </svg>
+            </span>
+            <select id="device-switcher" class="builder-select">
+              <option value="desktop">Desktop</option>
+              <option value="tablet">Tablet</option>
+              <option value="mobilePortrait">Mobile</option>
+            </select>
+          </label>
+        </div>
+        <div class="builder-toolbar-group">
+          <button id="btn-undo" class="builder-button">
+            <span class="builder-button__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M9 14 4 9l5-5" />
+                <path d="M4 9h9a7 7 0 1 1 0 14h-1" />
+              </svg>
+            </span>
+            <span>Undo</span>
+          </button>
+          <button id="btn-redo" class="builder-button">
+            <span class="builder-button__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="m15 14 5-5-5-5" />
+                <path d="M20 9h-9a7 7 0 1 0 0 14h1" />
+              </svg>
+            </span>
+            <span>Redo</span>
+          </button>
+        </div>
+        <div class="builder-toolbar-group">
+          <button id="btn-clear" class="builder-button">
+            <span class="builder-button__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M3 6h18" />
+                <path d="M8 6V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6" />
+                <path d="m6 6 1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14" />
+              </svg>
+            </span>
+            <span>Clear</span>
+          </button>
+          <button id="btn-fullscreen" class="builder-button">
+            <span class="builder-button__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                <path d="M16 3h3a2 2 0 0 1 2 2v3" />
+                <path d="M8 21H5a2 2 0 0 1-2-2v-3" />
+                <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+              </svg>
+            </span>
+            <span>Focus</span>
+          </button>
+          <button id="btn-code" class="builder-button">
+            <span class="builder-button__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="m8 9-4 3 4 3" />
+                <path d="m16 9 4 3-4 3" />
+                <path d="m14 5-4 14" />
+              </svg>
+            </span>
+            <span>Export</span>
+          </button>
+          <button id="btn-save" class="builder-button builder-button--primary">
+            <span class="builder-button__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z" />
+                <path d="M17 21v-8H7v8" />
+                <path d="M7 3v5h8" />
+              </svg>
+            </span>
+            <span>Save Draft</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="builder-workspace">
+      <aside class="builder-sidebar builder-sidebar--left">
+        <section class="builder-panel builder-panel--library">
+          <div class="builder-panel__header">
+            <span class="builder-eyebrow">Library</span>
+            <strong>Blocks</strong>
+            <span>Search, filter, and drag polished email sections into the canvas.</span>
+          </div>
+          <div class="builder-panel__toolbar">
+            <label class="builder-search">
+              <span class="builder-search__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-3.5-3.5" />
+                </svg>
+              </span>
+              <input id="block-search" type="search" placeholder="Search blocks..." autocomplete="off" />
+            </label>
+            <div id="block-filter-chips" class="builder-chip-list"></div>
+          </div>
+          <div class="builder-panel__content builder-panel__content--library" id="blocks"></div>
+        </section>
+
+        <section class="builder-panel builder-panel--compact">
+          <div class="builder-panel__header">
+            <span class="builder-eyebrow">Quick Tip</span>
+            <strong>Personalization</strong>
+            <span>Use the Email Tags category for merge fields like <code>{{name}}</code> and unsubscribe links.</span>
+          </div>
+        </section>
+      </aside>
+
+      <main class="builder-canvas">
+        <div class="builder-canvas__header">
+          <div>
+            <span class="builder-eyebrow">Canvas</span>
+            <strong>Preview Stage</strong>
+            <span>Focused editing surface with a centered 600px email frame and clearer selection states.</span>
+          </div>
+          <div class="builder-canvas__meta">
+            <span class="builder-pill">Email-safe canvas</span>
+            <span id="canvas-mode-label" class="builder-pill builder-pill--soft">Desktop preview</span>
+          </div>
+        </div>
+        <div class="builder-canvas__frame">
+          <div class="builder-canvas__stage">
+            <div id="gjs"></div>
+          </div>
+        </div>
+      </main>
+
+      <aside class="builder-sidebar builder-sidebar--right">
+        <section class="builder-panel builder-panel--inspector">
+          <div class="builder-panel__header">
+            <span class="builder-eyebrow">Inspector</span>
+            <strong>Selected Block Controls</strong>
+            <span>Switch between content, styles, and outline for a cleaner editing flow.</span>
+          </div>
+          <div class="builder-tab-list" role="tablist" aria-label="Inspector panels">
+            <button class="builder-tab-trigger is-active" type="button" role="tab" aria-selected="true"
+              data-inspector-tab="content">Content</button>
+            <button class="builder-tab-trigger" type="button" role="tab" aria-selected="false"
+              data-inspector-tab="style">Style</button>
+            <button class="builder-tab-trigger" type="button" role="tab" aria-selected="false"
+              data-inspector-tab="outline">Outline</button>
+          </div>
+          <div class="builder-tab-panels">
+            <div class="builder-tab-panel is-active" data-inspector-panel="content">
+              <div class="builder-note">Edit copy, links, images, and section-level options here. If it looks empty,
+                reselect the outer section from the canvas.</div>
+              <div class="builder-panel__content traits-container"></div>
+            </div>
+            <div class="builder-tab-panel" data-inspector-panel="style">
+              <div class="builder-note">Tuned for cleaner spacing, color, border, and typography controls with a more
+                polished editor feel.</div>
+              <div class="builder-panel__content builder-panel__content--fill styles-container"></div>
+            </div>
+            <div class="builder-tab-panel" data-inspector-panel="outline">
+              <div class="builder-note">Use the structure view to jump between parent sections quickly without hunting
+                around the canvas.</div>
+              <div class="builder-panel__content outline-container"></div>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </div> -->
+
+  <div id="template-modal" class="builder-modal">
+    <div class="builder-modal__content">
+      <div class="builder-modal__header">
+        <div>
+          <h2>Templates</h2>
+          <p>Load a starter email layout or begin from a clean canvas.</p>
+        </div>
+        <button id="btn-close-modal" class="builder-modal__close">&times;</button>
+      </div>
+      <div id="template-grid" class="template-grid"></div>
+    </div>
+  </div>
+
+  <div id="export-modal" class="builder-modal">
+    <div class="builder-modal__content builder-modal__content--wide">
+      <div class="builder-modal__header">
+        <div>
+          <h2>Production HTML</h2>
+          <p>Copy or download the compiled email for SendGrid, Mailchimp, Klaviyo, AWS SES, or your own sender.</p>
+        </div>
+        <button id="btn-close-export" class="builder-modal__close">&times;</button>
+      </div>
+      <textarea id="export-code" class="export-code" spellcheck="false" readonly></textarea>
+      <div class="builder-modal__footer">
+        <div class="builder-modal__hint">Inline styles are applied where possible, and responsive email rules stay in the document head.</div>
+        <div class="builder-topbar__actions">
+          <button id="btn-copy-html" class="builder-button">Copy HTML</button>
+          <button id="btn-download-html" class="builder-button builder-button--primary">Download HTML</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="builder-toast" class="builder-toast" aria-live="polite"></div>
+
+  <script src="minimal-builder-plugin.js"></script>
+  <script type="text/javascript">
+    const minimalBuilder = window.grapesjsMinimalBuilder;
+    const STORAGE_KEY = 'grapesjs-email-builder-project';
+    const DEFAULT_TEMPLATE_KEY = 'minimal';
+    const templateModal = document.getElementById('template-modal');
+    const exportModal = document.getElementById('export-modal');
+    const templateGrid = document.getElementById('template-grid');
+    const exportCode = document.getElementById('export-code');
+    const saveStatus = document.getElementById('save-status');
+    const toast = document.getElementById('builder-toast');
+    const blockSearch = document.getElementById('block-search');
+    const blockFilterChips = document.getElementById('block-filter-chips');
+    const canvasModeLabel = document.getElementById('canvas-mode-label');
+
+    let toastTimer = 0;
+    let lastExportHtml = '';
+    let activeBlockCategory = 'all';
+
+    const setStatus = (message, state = 'saved') => {
+      saveStatus.textContent = message;
+      saveStatus.dataset.state = state;
+    };
+
+    const showToast = (message) => {
+      toast.textContent = message;
+      toast.classList.add('is-visible');
+      window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => toast.classList.remove('is-visible'), 2600);
+    };
+
+    const openModal = (modal) => modal.classList.add('open');
+    const closeModal = (modal) => modal.classList.remove('open');
+    const cloneData = (value) => JSON.parse(JSON.stringify(value || []));
+    const normalizeLabel = (value = '') => `${value}`.trim().toLowerCase();
+
+    const setCanvasModeLabel = (deviceId) => {
+      const labels = {
+        desktop: 'Desktop preview',
+        tablet: 'Tablet preview',
+        mobilePortrait: 'Mobile preview',
+      };
+      canvasModeLabel.textContent = labels[deviceId] || 'Desktop preview';
+    };
+
+    const editor = grapesjs.init({
+      container: '#gjs',
+      height: '100%',
+      width: 'auto',
+      storageManager: {
+        type: 'local',
+        autosave: true,
+        autoload: true,
+        stepsBeforeSave: 1,
+        options: {
+          local: {
+            key: STORAGE_KEY,
+            checkLocal: true,
+          },
+        },
+      },
+      avoidInlineStyle: false,
+      jsInHtml: false,
+      panels: {
+        defaults: [],
+      },
+      deviceManager: {
+        devices: [
+          { id: 'desktop', name: 'Desktop', width: '' },
+          { id: 'tablet', name: 'Tablet', width: '768px', widthMedia: '992px' },
+          { id: 'mobilePortrait', name: 'Mobile', width: '320px', widthMedia: '480px' },
+        ]
+      },
+      assetManager: {
+        assets: [
+          'https://picsum.photos/id/1060/900/700',
+          'https://picsum.photos/id/1080/900/700',
+          'https://picsum.photos/id/1050/900/700',
+          'https://picsum.photos/id/1039/900/700',
+        ],
+      },
+      blockManager: {
+        appendTo: '#blocks',
+      },
+      layerManager: {
+        appendTo: '.outline-container',
+      },
+      selectorManager: {
+        appendTo: '.styles-container',
+        componentFirst: true,
+      },
+      styleManager: {
+        appendTo: '.styles-container',
+        sectors: minimalBuilder.styleManagerSectors(),
+      },
+      traitManager: {
+        appendTo: '.traits-container',
+      },
+      baseCss: minimalBuilder.canvasCss,
+      plugins: [minimalBuilder],
+      components: [],
+    });
+
+    const hasCanvasContent = () => {
+      const wrapper = editor.getWrapper();
+      return !!wrapper && wrapper.components().length > 0;
+    };
+
+    const setInspectorTab = (tabName) => {
+      document.querySelectorAll('[data-inspector-tab]').forEach((trigger) => {
+        const isActive = trigger.dataset.inspectorTab === tabName;
+        trigger.classList.toggle('is-active', isActive);
+        trigger.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+
+      document.querySelectorAll('[data-inspector-panel]').forEach((panel) => {
+        panel.classList.toggle('is-active', panel.dataset.inspectorPanel === tabName);
+      });
+    };
+
+    const applyBlockFilters = () => {
+      const query = normalizeLabel(blockSearch.value);
+      const categoryEls = Array.from(document.querySelectorAll('#blocks .gjs-block-category'));
+
+      categoryEls.forEach((categoryEl) => {
+        const titleEl = categoryEl.querySelector('.gjs-title');
+        const categoryName = normalizeLabel(titleEl ? titleEl.textContent : '');
+        let visibleBlocks = 0;
+
+        categoryEl.querySelectorAll('.gjs-block').forEach((blockEl) => {
+          const blockText = normalizeLabel(blockEl.textContent || '');
+          const matchesQuery = !query || blockText.includes(query);
+          const matchesCategory = activeBlockCategory === 'all' || categoryName === activeBlockCategory;
+          const isVisible = matchesQuery && matchesCategory;
+          blockEl.style.display = isVisible ? '' : 'none';
+          visibleBlocks += isVisible ? 1 : 0;
+        });
+
+        categoryEl.style.display = visibleBlocks ? '' : 'none';
+      });
+
+      const noCategoryBlocks = Array.from(document.querySelectorAll('#blocks .gjs-blocks-no-cat .gjs-block'));
+      noCategoryBlocks.forEach((blockEl) => {
+        const blockText = normalizeLabel(blockEl.textContent || '');
+        const matchesQuery = !query || blockText.includes(query);
+        const matchesCategory = activeBlockCategory === 'all';
+        blockEl.style.display = matchesQuery && matchesCategory ? '' : 'none';
+      });
+    };
+
+    const renderBlockCategoryChips = () => {
+      const categoryLabels = Array.from(
+        new Set(
+          editor.BlockManager.getAll().models.map((block) => block.getCategoryLabel()).filter(Boolean),
+        ),
+      );
+
+      const items = ['All', ...categoryLabels];
+      blockFilterChips.innerHTML = '';
+
+      items.forEach((label) => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = `builder-chip${normalizeLabel(label) === activeBlockCategory ? ' is-active' : ''}`;
+        chip.textContent = label;
+        chip.dataset.category = normalizeLabel(label);
+        chip.addEventListener('click', () => {
+          activeBlockCategory = chip.dataset.category || 'all';
+          blockFilterChips.querySelectorAll('.builder-chip').forEach((item) => {
+            item.classList.toggle('is-active', item === chip);
+          });
+          applyBlockFilters();
+        });
+        blockFilterChips.appendChild(chip);
+      });
+    };
+
+    const inlineEditorStyles = (html, css) => {
+      const doc = document.implementation.createHTMLDocument('email-export');
+      doc.body.innerHTML = html;
+
+      const styleEl = doc.createElement('style');
+      styleEl.textContent = css;
+      doc.head.appendChild(styleEl);
+
+      const retainedCss = [];
+      const appendStyle = (element, cssText) => {
+        if (!cssText || element === styleEl) return;
+        const existing = (element.getAttribute('style') || '').trim();
+        const normalizedExisting = existing ? `${existing.replace(/;+\s*$/, '')}; ` : '';
+        element.setAttribute('style', `${normalizedExisting}${cssText}`.replace(/\s+/g, ' ').trim());
+      };
+
+      const rules = styleEl.sheet ? Array.from(styleEl.sheet.cssRules || []) : [];
+      rules.forEach((rule) => {
+        if (rule.type === CSSRule.STYLE_RULE) {
+          try {
+            const elements = doc.querySelectorAll(rule.selectorText);
+            if (!elements.length) return;
+            elements.forEach((element) => appendStyle(element, rule.style.cssText));
+          } catch (error) {
+            retainedCss.push(rule.cssText);
+          }
+          return;
+        }
+
+        retainedCss.push(rule.cssText);
+      });
+
+      styleEl.remove();
+
+      return {
+        html: doc.body.innerHTML.trim(),
+        bodyStyle: doc.body.getAttribute('style') || '',
+        retainedCss: retainedCss.join('\n'),
+      };
+    };
+
+    const buildProductionHtml = () => {
+      const rawHtml = editor.getHtml({ cleanId: true });
+      const rawCss = [minimalBuilder.canvasCss, editor.getCss({ keepUnusedStyles: false })].filter(Boolean).join('\n');
+      const { html, bodyStyle, retainedCss } = inlineEditorStyles(rawHtml, rawCss);
+      const headCss = [
+        'a[x-apple-data-detectors], u + #body a, #MessageViewBody a { color: inherit !important; text-decoration: none !important; }',
+        retainedCss,
+      ]
+        .filter(Boolean)
+        .join('\n');
+      const finalBodyStyle = ['margin:0;', 'padding:0;', 'background:#f1efeb;', bodyStyle].filter(Boolean).join(' ');
+
+      return `<!doctype html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <title>Email Template</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings xmlns:o="urn:schemas-microsoft-com:office:office">
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  ${headCss ? `<style>${headCss}</style>` : ''}
+</head>
+<body id="body" style="${finalBodyStyle}">
+  <center role="article" aria-roledescription="email" lang="en" style="width:100%; background:#f1efeb;">
+${html}
+  </center>
+</body>
+</html>`;
+    };
+
+    const updateExportCode = () => {
+      lastExportHtml = buildProductionHtml();
+      exportCode.value = lastExportHtml;
+      return lastExportHtml;
+    };
+
+    const downloadHtml = (html) => {
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'email-template.html';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    };
+
+    const copyHtml = async (html) => {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(html);
+        return;
+      }
+
+      exportCode.focus();
+      exportCode.select();
+      document.execCommand('copy');
+    };
+
+    const applyTemplate = async (templateKey) => {
+      const template = minimalBuilder.emailTemplates[templateKey];
+      editor.Css.clear();
+      editor.setComponents(template ? cloneData(template.components) : []);
+      closeModal(templateModal);
+      await editor.store();
+      setStatus('Saved locally', 'saved');
+      showToast(template ? `${template.name} loaded.` : 'Blank canvas ready.');
+    };
+
+    const renderTemplateGrid = () => {
+      templateGrid.innerHTML = '';
+
+      Object.entries(minimalBuilder.emailTemplates).forEach(([key, tpl]) => {
+        const card = document.createElement('div');
+        card.className = 'template-card';
+        card.innerHTML = `<h3>${tpl.name}</h3><p>${tpl.description}</p>`;
+        card.addEventListener('click', () => {
+          applyTemplate(key).catch(() => {
+            setStatus('Save failed', 'error');
+            showToast('Could not load that template.');
+          });
+        });
+        templateGrid.appendChild(card);
+      });
+
+      const blankCard = document.createElement('div');
+      blankCard.className = 'template-card';
+      blankCard.innerHTML = '<h3>Blank Canvas</h3><p>Start from scratch with only the email-safe block library.</p>';
+      blankCard.addEventListener('click', () => {
+        applyTemplate('').catch(() => {
+          setStatus('Save failed', 'error');
+          showToast('Could not reset the canvas.');
+        });
+      });
+      templateGrid.appendChild(blankCard);
+    };
+
+    editor.on('storage:start:store', () => setStatus('Saving locally...', 'saving'));
+    editor.on('storage:end:store', () => setStatus('Saved locally', 'saved'));
+    editor.on('storage:error:store', () => {
+      setStatus('Save failed', 'error');
+      showToast('Could not save the draft in this browser.');
+    });
+
+    editor.on('load', async () => {
+      renderTemplateGrid();
+
+      if (!hasCanvasContent() && minimalBuilder.emailTemplates[DEFAULT_TEMPLATE_KEY]) {
+        editor.setComponents(cloneData(minimalBuilder.emailTemplates[DEFAULT_TEMPLATE_KEY].components));
+        await editor.store();
+      }
+
+      document.getElementById('btn-store').addEventListener('click', () => openModal(templateModal));
+      document.getElementById('btn-close-modal').addEventListener('click', () => closeModal(templateModal));
+      document.getElementById('btn-close-export').addEventListener('click', () => closeModal(exportModal));
+
+      document.querySelectorAll('[data-inspector-tab]').forEach((trigger) => {
+        trigger.addEventListener('click', () => setInspectorTab(trigger.dataset.inspectorTab || 'content'));
+      });
+
+      [templateModal, exportModal].forEach((modal) => {
+        modal.addEventListener('click', (event) => {
+          if (event.target === modal) {
+            closeModal(modal);
+          }
+        });
+      });
+
+      document.getElementById('device-switcher').addEventListener('change', (event) => {
+        editor.setDevice(event.target.value);
+        setCanvasModeLabel(event.target.value);
+      });
+      document.getElementById('btn-undo').addEventListener('click', () => editor.runCommand('core:undo'));
+      document.getElementById('btn-redo').addEventListener('click', () => editor.runCommand('core:redo'));
+      document.getElementById('btn-fullscreen').addEventListener('click', () => editor.runCommand('core:fullscreen'));
+
+      document.getElementById('btn-clear').addEventListener('click', async () => {
+        if (!window.confirm('Clear the current email canvas? This keeps your templates but removes the current layout.')) {
+          return;
+        }
+
+        editor.runCommand('core:canvas-clear');
+        editor.Css.clear();
+        await editor.store();
+        showToast('Canvas cleared.');
+      });
+
+      document.getElementById('btn-code').addEventListener('click', () => {
+        try {
+          updateExportCode();
+          openModal(exportModal);
+        } catch (error) {
+          setStatus('Export failed', 'error');
+          showToast('Could not build the production HTML.');
+        }
+      });
+
+      document.getElementById('btn-copy-html').addEventListener('click', async () => {
+        try {
+          const html = lastExportHtml || updateExportCode();
+          await copyHtml(html);
+          showToast('Production HTML copied.');
+        } catch (error) {
+          showToast('Copy failed. You can still select the HTML manually.');
+        }
+      });
+
+      document.getElementById('btn-download-html').addEventListener('click', () => {
+        try {
+          const html = lastExportHtml || updateExportCode();
+          downloadHtml(html);
+          showToast('HTML file downloaded.');
+        } catch (error) {
+          showToast('Download failed.');
+        }
+      });
+
+      document.getElementById('btn-save').addEventListener('click', async () => {
+        try {
+          await editor.store();
+          showToast('Draft saved locally.');
+        } catch (error) {
+          setStatus('Save failed', 'error');
+          showToast('Could not save the draft.');
+        }
+      });
+
+      blockSearch.addEventListener('input', applyBlockFilters);
+      renderBlockCategoryChips();
+      applyBlockFilters();
+      setInspectorTab('content');
+      setCanvasModeLabel(document.getElementById('device-switcher').value);
+      setStatus('Autosave ready', 'saved');
+      showToast('Builder ready. Drafts now save in this browser.');
+    });
+  </script>
+</body>
+
+</html>

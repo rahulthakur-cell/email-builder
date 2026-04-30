@@ -1,52 +1,28 @@
 (function (global) {
-  // Themed icon system — each block gets a color-coded icon matching its use case
-  const blockLabel = (shortName, title, copy) => {
-    const iconMap = {
-      // --- Email Sections (rich, warm palette) ---
-      HD:  { color: '#3b82f6', bg: '#eff6ff', d: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>' },
-      HR:  { color: '#8b5cf6', bg: '#f5f3ff', d: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>' },
-      FG:  { color: '#ec4899', bg: '#fdf2f8', d: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>' },
-      PG:  { color: '#f97316', bg: '#fff7ed', d: '<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>' },
-      PC:  { color: '#0ea5e9', bg: '#f0f9ff', d: '<rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><circle cx="12" cy="15" r="2"/>' },
-      CR:  { color: '#6366f1', bg: '#eef2ff', d: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>' },
-      TS:  { color: '#14b8a6', bg: '#f0fdfa', d: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="12" y2="13"/>' },
-      FQ:  { color: '#f59e0b', bg: '#fffbeb', d: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>' },
-      CT:  { color: '#ef4444', bg: '#fef2f2', d: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>' },
-      FT:  { color: '#64748b', bg: '#f8fafc', d: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="8" y1="19" x2="8.01" y2="19"/><line x1="12" y1="19" x2="12.01" y2="19"/><line x1="16" y1="19" x2="16.01" y2="19"/>' },
-
-      // --- Content Elements (cool, modern palette) ---
-      TXT: { color: '#8b5cf6', bg: '#f5f3ff', d: '<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>' },
-      LNK: { color: '#3b82f6', bg: '#eff6ff', d: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>' },
-      IMG: { color: '#f97316', bg: '#fff7ed', d: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>' },
-      SP:  { color: '#94a3b8', bg: '#f1f5f9', d: '<line x1="12" y1="5" x2="12" y2="19"/><polyline points="8 8 12 5 16 8"/><polyline points="8 16 12 19 16 16"/>' },
-      BTN: { color: '#6366f1', bg: '#eef2ff', d: '<rect x="3" y="7" width="18" height="10" rx="3" ry="3"/><line x1="8" y1="12" x2="16" y2="12"/>' },
-      DIV: { color: '#a8a29e', bg: '#fafaf9', d: '<line x1="4" y1="12" x2="20" y2="12"/>' },
-      LST: { color: '#14b8a6', bg: '#f0fdfa', d: '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/>' },
-
-      // --- Layout Sections (structural, neutral) ---
-      S1:  { color: '#64748b', bg: '#f1f5f9', d: '<rect x="4" y="4" width="16" height="16" rx="2" ry="2"/>' },
-      S3:  { color: '#64748b', bg: '#f1f5f9', d: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>' },
-
-      // --- Social & Special ---
-      SOC: { color: '#ec4899', bg: '#fdf2f8', d: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>' },
-
-      // --- Merge Tags (data/variable tones) ---
-      NM:  { color: '#f59e0b', bg: '#fffbeb', d: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>' },
-      EM:  { color: '#06b6d4', bg: '#ecfeff', d: '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>' },
-      UN:  { color: '#64748b', bg: '#f8fafc', d: '<path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/>' },
-    };
-
-    const icon = iconMap[shortName] || { color: '#64748b', bg: '#f1f5f9', d: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>' };
-
-    return `
-      <div style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;background:${icon.bg};color:${icon.color};border-radius:10px;flex-shrink:0;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;">
-          ${icon.d}
-        </svg>
+  const blockLabel = (shortName, title, copy) => `
+    <div style="display:grid; gap:9px; text-align:left;">
+      <div
+        style="
+          width:44px;
+          height:44px;
+          border-radius:14px;
+          border:1px solid #e7e5e4;
+          background:linear-gradient(180deg, #ffffff 0%, #f5f5f4 100%);
+          display:grid;
+          place-items:center;
+          box-shadow:0 10px 24px rgba(15, 23, 42, 0.07);
+          color:#111827;
+          font-size:12px;
+          font-weight:700;
+          letter-spacing:0.08em;
+        "
+      >
+        ${shortName}
       </div>
-      <div style="font-size:11px;font-weight:600;color:#334155;text-align:center;line-height:1.3;margin-top:2px;">${title}</div>
-    `;
-  };
+      <div style="font-size:13px; font-weight:600; color:#111827;">${title}</div>
+      <div style="font-size:11px; line-height:1.45; color:#78716c;">${copy}</div>
+    </div>
+  `;
 
   const tonePalette = {
     'tone-oat': { background: '#f8f7f4', accent: '#efece6' },
@@ -318,7 +294,7 @@
         wrapper.className = 'sb-trait-dynamic-list';
         wrapper.innerHTML = `
           <div class="sb-dynamic-list-items"></div>
-          <button class="sb-dynamic-list-add" type="button" style="width: 100%; padding: 7px 10px; margin-top: 6px; border-radius: 6px; border: 1px dashed rgba(0,0,0,0.12); background: transparent; cursor: pointer; font-size: 12px; font-family: inherit; color: #6b7280; transition: all 0.12s ease;" onmouseover="this.style.borderColor='#6366f1';this.style.color='#6366f1'" onmouseout="this.style.borderColor='rgba(0,0,0,0.12)';this.style.color='#6b7280'">+ Add Item</button>
+          <button class="sb-dynamic-list-add" type="button" style="width: 100%; padding: 8px; margin-top: 10px; border-radius: 6px; border: 1px dashed #ccc; background: transparent; cursor: pointer;">+ Add Item</button>
         `;
 
         const list = wrapper.querySelector('.sb-dynamic-list-items');
@@ -342,14 +318,17 @@
           const items = getItems();
           items.forEach((item, index) => {
             const itemEl = document.createElement('div');
-            itemEl.style.cssText = 'margin-bottom:8px; padding:10px 12px; border:1px solid rgba(0,0,0,0.07); border-radius:8px; background:#fafbfc;';
+            itemEl.style.marginBottom = '10px';
+            itemEl.style.padding = '10px';
+            itemEl.style.border = '1px solid #eee';
+            itemEl.style.borderRadius = '6px';
             itemEl.innerHTML = `
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <span style="font-size:10px; font-weight:600; color:#9ca3af; text-transform:uppercase; letter-spacing:0.04em;">Item ${index + 1}</span>
-                <button type="button" data-index="${index}" class="sb-dynamic-list-remove" style="width:22px; height:22px; display:flex; align-items:center; justify-content:center; color:#ef4444; background:none; border:1px solid transparent; border-radius:4px; cursor:pointer; font-size:14px; line-height:1; transition:all 0.12s ease;" onmouseover="this.style.background='rgba(239,68,68,0.08)';this.style.borderColor='rgba(239,68,68,0.15)'" onmouseout="this.style.background='none';this.style.borderColor='transparent'">&times;</button>
+              <div style="display:flex; justify-content:space-between; margin-bottom: 5px;">
+                <label style="font-size: 11px; font-weight: bold; color: #555;">Item ${index + 1}</label>
+                <button type="button" data-index="${index}" class="sb-dynamic-list-remove" style="color:red; background:none; border:none; cursor:pointer;">&times;</button>
               </div>
-              <input type="text" data-index="${index}" data-key="label" value="${item.label || ''}" placeholder="Label" style="width:100%; box-sizing:border-box; margin-bottom:6px; border-radius:6px; border:1px solid rgba(0,0,0,0.1); padding:7px 10px; font-size:12px; font-family:inherit; color:#111827; background:#fff; outline:none; transition:border-color 0.12s ease;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='rgba(0,0,0,0.1)'">
-              <input type="text" data-index="${index}" data-key="url" value="${item.url || ''}" placeholder="URL (e.g. https://...)" style="width:100%; box-sizing:border-box; border-radius:6px; border:1px solid rgba(0,0,0,0.1); padding:7px 10px; font-size:12px; font-family:inherit; color:#111827; background:#fff; outline:none; transition:border-color 0.12s ease;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='rgba(0,0,0,0.1)'">
+              <input type="text" data-index="${index}" data-key="label" value="${item.label || ''}" placeholder="Label" style="width:100%; box-sizing:border-box; margin-bottom:6px; border-radius:4px; border:1px solid #ccc; padding:6px; font-size:12px;">
+              <input type="text" data-index="${index}" data-key="url" value="${item.url || ''}" placeholder="URL" style="width:100%; box-sizing:border-box; border-radius:4px; border:1px solid #ccc; padding:6px; font-size:12px;">
             `;
             list.appendChild(itemEl);
           });
@@ -408,7 +387,7 @@
             <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
               <tr>
                 ${model.get('brandInitials')
-        ? `
+                  ? `
                     <td valign="top" style="width:52px; padding-right:14px;">
                       <table role="presentation" width="44" border="0" cellpadding="0" cellspacing="0" style="background:#111827; border-radius:14px;">
                         <tr>
@@ -419,7 +398,7 @@
                       </table>
                     </td>
                   `
-        : ''}
+                  : ''}
                 <td valign="middle" align="left">
                   ${model.get('brandName') ? `<strong style="display:block; font-size:20px; line-height:1.2; color:#111827;">${model.get('brandName')}</strong>` : ''}
                   ${model.get('brandTagline') ? `<span style="display:block; margin-top:6px; font-size:13px; line-height:1.6; color:#57534e;">${model.get('brandTagline')}</span>` : ''}
@@ -429,7 +408,7 @@
           </td>
         </tr>
         ${navItems.length
-        ? `
+          ? `
             <tr>
               <td align="center" style="padding:0 20px 18px; border-top:1px solid #ece8e1; border-bottom:1px solid #ece8e1;">
                 <div style="padding:13px 0 12px;">
@@ -438,9 +417,9 @@
               </td>
             </tr>
           `
-        : ''}
+          : ''}
         ${actions
-        ? `
+          ? `
             <tr>
               <td style="padding:20px 20px 24px;">
                 <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center">
@@ -449,7 +428,7 @@
               </td>
             </tr>
           `
-        : ''}
+          : ''}
       </table>
     `.trim();
   };
@@ -474,12 +453,12 @@
             <h1 style="margin:18px 0 16px; font-size:36px; line-height:1.2; color:#111827;">${model.get('heroTitle')}</h1>
             <p style="margin:0 auto 28px; max-width:480px; font-size:16px; line-height:1.7; color:#57534e;">${model.get('heroText')}</p>
             ${heroButtons
-        ? `
+              ? `
                 <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center">
                   <tr>${heroButtons}</tr>
                 </table>
               `
-        : ''}
+              : ''}
             <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-top:32px; background:#f8f7f4; border:1px solid #ece8e1; border-radius:14px;">
               <tr>
                 <td class="responsive-td" width="33.33%" align="center" style="padding:18px 12px;">
@@ -569,8 +548,8 @@
           </td>
         </tr>
         ${slides
-        .map(
-          (slide, index) => `
+          .map(
+            (slide, index) => `
               <tr>
                 <td style="padding:0 20px ${index === slides.length - 1 ? '40px' : '18px'};">
                   <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="background:#fafaf9; border:1px solid #ece8e1; border-radius:16px;">
@@ -586,8 +565,8 @@
                 </td>
               </tr>
             `,
-        )
-        .join('')}
+          )
+          .join('')}
       </table>
     `.trim();
   };
@@ -609,8 +588,8 @@
             <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
               <tr>
                 ${features
-        .map(
-          (feature) => `
+                  .map(
+                    (feature) => `
                       <td class="responsive-td" width="33.33%" valign="top" style="padding:10px; text-align:center;">
                         <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" width="40" style="margin:0 auto 12px; background:#111827; border-radius:999px;">
                           <tr>
@@ -621,8 +600,8 @@
                         <p style="margin:10px 0 0; font-size:14px; line-height:1.7; color:#57534e;">${feature.text}</p>
                       </td>
                     `,
-        )
-        .join('')}
+                  )
+                  .join('')}
               </tr>
             </table>
           </td>
@@ -648,8 +627,8 @@
             <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
               <tr>
                 ${quotes
-        .map(
-          (quote) => `
+                  .map(
+                    (quote) => `
                       <td class="responsive-td" width="33.33%" valign="top" style="padding:10px;">
                         <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="height:100%; background:#fafaf9; border:1px solid #ece8e1; border-radius:16px;">
                           <tr>
@@ -662,8 +641,8 @@
                         </table>
                       </td>
                     `,
-        )
-        .join('')}
+                  )
+                  .join('')}
               </tr>
             </table>
           </td>
@@ -690,8 +669,8 @@
             </div>
             <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
               ${answers
-        .map(
-          (item) => `
+                .map(
+                  (item) => `
                     <tr>
                       <td style="padding:0 0 16px;">
                         <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="background:#fafaf9; border:1px solid #ece8e1; border-radius:14px;">
@@ -705,8 +684,8 @@
                       </td>
                     </tr>
                   `,
-        )
-        .join('')}
+                )
+                .join('')}
             </table>
           </td>
         </tr>
@@ -734,12 +713,12 @@
             <h2 style="margin:18px 0 14px; font-size:28px; line-height:1.25; color:#ffffff;">${model.get('ctaTitle')}</h2>
             <p style="margin:0 auto 28px; max-width:460px; font-size:16px; line-height:1.7; color:#e7e5e4;">${model.get('ctaText')}</p>
             ${buttons
-        ? `
+              ? `
                 <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center">
                   <tr>${buttons}</tr>
                 </table>
               `
-        : ''}
+              : ''}
           </td>
         </tr>
       </table>
@@ -771,7 +750,7 @@
             <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
               <tr>
                 ${model.get('footerInitials')
-        ? `
+                  ? `
                     <td valign="top" style="width:52px; padding-right:14px;">
                       <table role="presentation" width="44" border="0" cellpadding="0" cellspacing="0" style="background:#111827; border-radius:14px;">
                         <tr>
@@ -782,7 +761,7 @@
                       </table>
                     </td>
                   `
-        : ''}
+                  : ''}
                 <td valign="top" align="left">
                   ${model.get('footerBrand') ? `<strong style="display:block; font-size:20px; line-height:1.2; color:#111827;">${model.get('footerBrand')}</strong>` : ''}
                   ${model.get('footerTagline') ? `<span style="display:block; margin-top:6px; font-size:13px; line-height:1.6; color:#57534e;">${model.get('footerTagline')}</span>` : ''}
@@ -811,14 +790,14 @@
                 <td class="responsive-td" width="33.33%" valign="top" style="padding:0 0 14px 10px;">
                   ${model.get('col3Title') ? `<strong style="display:block; margin-bottom:12px; font-size:12px; line-height:1.5; color:#111827; letter-spacing:0.08em; text-transform:uppercase;">${model.get('col3Title')}</strong>` : ''}
                   ${col3Lines
-        .map(
-          (line) => `
+                    .map(
+                      (line) => `
                         <span style="display:block; margin-bottom:8px; font-size:13px; line-height:1.6; color:#57534e;">
                           ${line}
                         </span>
                       `,
-        )
-        .join('')}
+                    )
+                    .join('')}
                 </td>
               </tr>
             </table>
@@ -851,8 +830,8 @@
           <td style="padding:28px 20px;">
             <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
               ${listItems
-        .map(
-          (item) => `
+                .map(
+                  (item) => `
                     <tr>
                       <td valign="top" style="width:18px; padding:0 10px 12px 0; font-size:16px; line-height:1.6; color:#0f766e;">&bull;</td>
                       <td valign="top" style="padding:0 0 12px; font-size:15px; line-height:1.7; color:#334155;">
@@ -860,12 +839,12 @@
                       </td>
                     </tr>
                   `,
-        )
-        .join('')}
+                )
+                .join('')}
             </table>
             ${model.get('listCta')
-        ? `<div style="padding-top:10px;">${renderButton(model.get('listCta'), model.get('listCtaLink'), { align: 'left', compact: true })}</div>`
-        : ''}
+              ? `<div style="padding-top:10px;">${renderButton(model.get('listCta'), model.get('listCtaLink'), { align: 'left', compact: true })}</div>`
+              : ''}
           </td>
         </tr>
       </table>
@@ -879,20 +858,20 @@
 
     body {
       margin: 0;
-      padding: 24px 0;
-      background: #f1efeb;
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.92), transparent 28%),
+        linear-gradient(180deg, #f8f7f4 0%, #f2efea 100%);
       color: #111827;
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
     }
 
     body:empty::before {
-      content: "Drag email-safe blocks from the left panel to start building your template.";
+      content: "Create something creative... drag blocks from the left panel to start building your template!";
       display: block;
       text-align: center;
       padding: 150px 20px;
       color: #a8a29e;
-      font-size: 20px;
-      line-height: 1.5;
+      font-size: 1.25rem;
       pointer-events: none;
     }
 
@@ -901,183 +880,948 @@
       text-decoration: none;
     }
 
-    table {
-      border-collapse: collapse;
-      mso-table-lspace: 0pt;
-      mso-table-rspace: 0pt;
+    .sb-section {
+      padding: 24px 28px;
     }
 
-    td {
-      border-collapse: collapse;
-    }
-
-    img {
-      display: block;
-      max-width: 100%;
-      height: auto;
-      border: 0;
-      outline: none;
-      text-decoration: none;
+    .sb-custom-list ul {
+      list-style-type: inherit;
+      list-style-position: inherit;
+      list-style-image: inherit;
     }
 
     .sb-shell {
-      width: 100% !important;
-      max-width: 600px !important;
-      margin: 0 auto !important;
+      width: min(1120px, 100%);
+      margin: 0 auto;
+    }
+
+    .sb-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid #e7e5e4;
+      background: rgba(255, 255, 255, 0.82);
+      color: #57534e;
+      font-size: 13px;
+      letter-spacing: 0.02em;
+    }
+
+    .sb-pill::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #0f766e;
+      box-shadow: 0 0 0 5px rgba(15, 118, 110, 0.12);
+    }
+
+    .sb-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 20px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-size: 14px;
+      font-weight: 600;
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        background-color 0.2s ease;
+    }
+
+    .sb-button:hover {
+      transform: translateY(-1px);
+    }
+
+    .sb-button--primary {
+      background: #111827;
+      color: #ffffff;
+      box-shadow: 0 18px 30px rgba(15, 23, 42, 0.14);
+    }
+
+    .sb-button--secondary {
+      background: rgba(255, 255, 255, 0.82);
+      border-color: #e7e5e4;
+      color: #111827;
+    }
+
+    .sb-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .sb-link::after {
+      content: '>';
+      font-size: 12px;
+    }
+
+    .sb-header__bar,
+    .sb-panel,
+    .sb-hero__card,
+    .sb-product-card,
+    .sb-carousel__viewport,
+    .sb-footer__bar {
+      border: 1px solid rgba(231, 229, 228, 0.95);
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 24px 56px rgba(15, 23, 42, 0.07);
+    }
+
+    .sb-header {
+      padding-top: 28px;
+      padding-bottom: 12px;
+    }
+
+    .sb-header__bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 18px 22px;
+      border-radius: 26px;
+    }
+
+    .sb-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sb-brand__mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #111827 0%, #334155 100%);
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+    }
+
+    .sb-brand__copy strong {
+      display: block;
+      font-size: 15px;
+      letter-spacing: 0.04em;
+    }
+
+    .sb-brand__copy span {
+      color: #78716c;
+      font-size: 12px;
+    }
+
+    .sb-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      color: #57534e;
+      font-size: 14px;
+    }
+
+    .sb-nav a:hover {
+      color: #111827;
+    }
+
+    .sb-header__actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .sb-hero {
+      padding-top: 12px;
+      padding-bottom: 22px;
+    }
+
+    .sb-hero__layout {
+      display: grid;
+      grid-template-columns: 1.18fr 0.82fr;
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .sb-panel {
+      border-radius: 34px;
+    }
+
+    .sb-hero__copy {
+      padding: 54px;
+    }
+
+    .sb-hero__title {
+      margin: 20px 0 14px;
+      font-size: clamp(42px, 5vw, 76px);
+      line-height: 0.96;
+      letter-spacing: -0.05em;
+    }
+
+    .sb-hero__text {
+      max-width: 620px;
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.75;
+      color: #57534e;
+    }
+
+    .sb-hero__actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 28px;
+    }
+
+    .sb-hero__stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 34px;
+    }
+
+    .sb-stat {
+      padding: 18px;
+      border-radius: 22px;
+      background: #f8f7f4;
+      border: 1px solid #ece8e1;
+    }
+
+    .sb-stat strong {
+      display: block;
+      font-size: 26px;
+      margin-bottom: 6px;
+      letter-spacing: -0.04em;
+    }
+
+    .sb-stat span {
+      color: #78716c;
+      font-size: 13px;
+    }
+
+    .sb-hero__card {
+      position: relative;
+      overflow: hidden;
+      padding: 28px;
+      border-radius: 34px;
+      background:
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.82), transparent 30%),
+        linear-gradient(180deg, #fafaf9 0%, #f1efeb 100%);
+    }
+
+    .sb-hero__surface {
+      position: relative;
+      height: 100%;
+      min-height: 460px;
+      border-radius: 28px;
+      padding: 26px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(244, 241, 236, 0.88)),
+        linear-gradient(135deg, rgba(15, 23, 42, 0.03), transparent 50%);
+      border: 1px solid rgba(231, 229, 228, 0.95);
+    }
+
+    .sb-hero__badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(17, 24, 39, 0.94);
+      color: #ffffff;
+      font-size: 12px;
+      letter-spacing: 0.06em;
+    }
+
+    .sb-hero__preview {
+      position: absolute;
+      left: 26px;
+      right: 26px;
+      bottom: 26px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .sb-preview-card {
+      padding: 20px;
+      border-radius: 24px;
       background: #ffffff;
+      border: 1px solid #ece8e1;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
     }
 
-    .sb-shell + .sb-shell {
-      margin-top: 16px !important;
+    .sb-preview-card strong {
+      display: block;
+      font-size: 22px;
+      margin-bottom: 8px;
+      letter-spacing: -0.03em;
     }
 
-    @media only screen and (max-width: 600px) {
-      .responsive-td {
-        display: block !important;
-        width: 100% !important;
-        text-align: center !important;
+    .sb-preview-card p {
+      margin: 0;
+      color: #57534e;
+      line-height: 1.65;
+      font-size: 14px;
+    }
+
+    .sb-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .sb-preview-mini {
+      border-radius: 22px;
+      padding: 22px;
+      min-height: 126px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8f7f4 100%);
+      border: 1px solid #ece8e1;
+    }
+
+    .sb-preview-mini span {
+      display: inline-block;
+      font-size: 12px;
+      color: #78716c;
+      margin-bottom: 10px;
+    }
+
+    .sb-preview-mini strong {
+      display: block;
+      font-size: 19px;
+      line-height: 1.35;
+      letter-spacing: -0.03em;
+    }
+
+    .sb-products {
+      padding-top: 10px;
+      padding-bottom: 24px;
+    }
+
+    .sb-section-heading {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .sb-section-heading h2 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+    }
+
+    .sb-section-heading p {
+      max-width: 680px;
+      margin: 0;
+      font-size: 16px;
+      color: #57534e;
+      line-height: 1.7;
+    }
+
+    .sb-products__grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+    }
+
+    .sb-product-card {
+      overflow: hidden;
+      border-radius: 30px;
+    }
+
+    .sb-product-card__visual {
+      position: relative;
+      min-height: 240px;
+      padding: 18px;
+      overflow: hidden;
+      background: linear-gradient(180deg, #f8f7f4 0%, #efebe6 100%);
+    }
+
+    .sb-product-card__visual.tone-oat {
+      background: linear-gradient(180deg, #faf7f2 0%, #efe8df 100%);
+    }
+
+    .sb-product-card__visual.tone-stone {
+      background: linear-gradient(180deg, #f4f4f5 0%, #e7e5e4 100%);
+    }
+
+    .sb-product-card__visual.tone-sage {
+      background: linear-gradient(180deg, #f0f5f2 0%, #dbe7df 100%);
+    }
+
+    .sb-product-card__glow {
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      right: -60px;
+      top: -70px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+      filter: blur(10px);
+    }
+
+    .sb-product-card__tag {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      color: #57534e;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+    }
+
+    .sb-product-card__media {
+      position: absolute;
+      inset: auto 20px 18px 20px;
+      min-height: 164px;
+      overflow: hidden;
+      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.78);
+      box-shadow: 0 22px 38px rgba(15, 23, 42, 0.12);
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .sb-product-card__image {
+      display: block;
+      width: 100%;
+      height: 178px;
+      object-fit: cover;
+    }
+
+    .sb-product-card__shape {
+      position: absolute;
+      inset: auto 20px 18px 20px;
+      display: grid;
+      place-items: center;
+      min-height: 152px;
+    }
+
+    .sb-product-card__shape span:first-child {
+      width: 136px;
+      height: 136px;
+      border-radius: 36px;
+      background: linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0.68) 100%);
+      box-shadow: 0 24px 42px rgba(15, 23, 42, 0.12);
+      transform: rotate(12deg);
+    }
+
+    .sb-product-card__shape span:last-child {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      border-radius: 24px;
+      background: rgba(17, 24, 39, 0.08);
+      transform: translate(48px, 34px);
+    }
+
+    .sb-product-card__content {
+      display: grid;
+      gap: 12px;
+      padding: 24px;
+    }
+
+    .sb-product-card__meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .sb-product-card__price {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .sb-product-card__rating {
+      color: #78716c;
+      font-size: 13px;
+    }
+
+    .sb-product-card__title {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: -0.04em;
+    }
+
+    .sb-product-card__copy {
+      margin: 0;
+      color: #57534e;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .sb-carousel {
+      padding-top: 14px;
+      padding-bottom: 26px;
+    }
+
+    .sb-carousel__topbar {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .sb-carousel__controls {
+      display: flex;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .sb-carousel__button {
+      width: 46px;
+      height: 46px;
+      border: 1px solid #e7e5e4;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.9);
+      color: #111827;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .sb-carousel__viewport {
+      overflow: hidden;
+      border-radius: 34px;
+    }
+
+    .sb-carousel__track {
+      display: flex;
+      transition: transform 0.45s ease;
+    }
+
+    .sb-carousel__slide {
+      min-width: 100%;
+      padding: 34px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(249, 248, 246, 0.98) 100%);
+    }
+
+    .sb-carousel__content {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 26px;
+      align-items: center;
+    }
+
+    .sb-carousel__media {
+      border-radius: 28px;
+      min-height: 300px;
+      border: 1px solid #ece8e1;
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.92), transparent 40%),
+        linear-gradient(180deg, #f7f5f1 0%, #e9e4dd 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sb-carousel__media::before,
+    .sb-carousel__media::after {
+      content: '';
+      position: absolute;
+      border-radius: 999px;
+      background: rgba(17, 24, 39, 0.08);
+    }
+
+    .sb-carousel__media::before {
+      width: 210px;
+      height: 210px;
+      right: -30px;
+      top: -30px;
+    }
+
+    .sb-carousel__media::after {
+      width: 120px;
+      height: 120px;
+      left: 32px;
+      bottom: 26px;
+    }
+
+    .sb-carousel__details {
+      display: grid;
+      gap: 16px;
+    }
+
+    .sb-carousel__details h3 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+    }
+
+    .sb-carousel__details p {
+      margin: 0;
+      color: #57534e;
+      line-height: 1.75;
+      font-size: 15px;
+    }
+
+    .sb-carousel__list {
+      display: grid;
+      gap: 12px;
+      padding: 0;
+      margin: 2px 0 4px;
+      list-style: none;
+    }
+
+    .sb-carousel__list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #44403c;
+      font-size: 14px;
+    }
+
+    .sb-carousel__list li::before {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #0f766e;
+      box-shadow: 0 0 0 6px rgba(15, 118, 110, 0.1);
+    }
+
+    .sb-carousel__dots {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .sb-carousel__dot {
+      width: 11px;
+      height: 11px;
+      border: 0;
+      border-radius: 999px;
+      background: #d6d3d1;
+      cursor: pointer;
+    }
+
+    .sb-features,
+    .sb-testimonials,
+    .sb-faq,
+    .sb-cta {
+      padding-top: 12px;
+      padding-bottom: 24px;
+    }
+
+    .sb-features__grid,
+    .sb-testimonials__grid,
+    .sb-faq__grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+    }
+
+    .sb-feature-card,
+    .sb-quote-card,
+    .sb-faq__item,
+    .sb-cta__panel {
+      border: 1px solid rgba(231, 229, 228, 0.95);
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 24px 56px rgba(15, 23, 42, 0.07);
+    }
+
+    .sb-feature-card,
+    .sb-quote-card,
+    .sb-faq__item {
+      padding: 24px;
+      border-radius: 30px;
+    }
+
+    .sb-feature-card {
+      display: grid;
+      gap: 14px;
+    }
+
+    .sb-feature-card__index {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: #111827;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .sb-feature-card h3,
+    .sb-faq__item h3 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: -0.04em;
+    }
+
+    .sb-feature-card p,
+    .sb-faq__item p {
+      margin: 0;
+      color: #57534e;
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .sb-quote-card {
+      display: grid;
+      gap: 14px;
+      min-height: 100%;
+    }
+
+    .sb-quote-card blockquote {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.6;
+      letter-spacing: -0.03em;
+    }
+
+    .sb-quote-card strong {
+      display: block;
+      font-size: 15px;
+    }
+
+    .sb-quote-card span {
+      color: #78716c;
+      font-size: 13px;
+    }
+
+    .sb-cta__panel {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 28px;
+      align-items: center;
+      padding: 32px;
+      border-radius: 34px;
+    }
+
+    .sb-cta__copy h2 {
+      margin: 16px 0 12px;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.06;
+      letter-spacing: -0.04em;
+    }
+
+    .sb-cta__copy p {
+      margin: 0;
+      color: #57534e;
+      font-size: 15px;
+      line-height: 1.75;
+    }
+
+    .sb-cta__actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .sb-footer {
+      padding-top: 8px;
+      padding-bottom: 42px;
+    }
+
+    .sb-footer__bar {
+      border-radius: 34px;
+      padding: 30px;
+    }
+
+    .sb-footer__grid {
+      display: grid;
+      grid-template-columns: 1.3fr 0.8fr 0.8fr 0.9fr;
+      gap: 24px;
+    }
+
+    .sb-footer__intro p,
+    .sb-footer__column a,
+    .sb-footer__meta {
+      color: #57534e;
+    }
+
+    .sb-footer__intro p,
+    .sb-footer__column a,
+    .sb-footer__meta,
+    .sb-footer__column span {
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .sb-footer__column {
+      display: grid;
+      gap: 8px;
+    }
+
+    .sb-footer__column strong {
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      color: #111827;
+    }
+
+    .sb-footer__column a:hover {
+      color: #111827;
+    }
+
+    .sb-footer__meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 26px;
+      padding-top: 18px;
+      border-top: 1px solid #ece8e1;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 1040px) {
+      .sb-hero__layout,
+      .sb-carousel__content,
+      .sb-footer__grid {
+        grid-template-columns: 1fr;
       }
 
-      .sb-shell {
-        width: 100% !important;
+      .sb-products__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .sb-features__grid,
+      .sb-testimonials__grid,
+      .sb-faq__grid,
+      .sb-cta__panel {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .sb-section {
+        padding: 18px 16px;
+      }
+
+      .sb-header__bar,
+      .sb-hero__copy,
+      .sb-hero__card,
+      .sb-footer__bar,
+      .sb-carousel__slide {
+        padding: 22px;
+        border-radius: 26px;
+      }
+
+      .sb-header__bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .sb-nav,
+      .sb-header__actions {
+        justify-content: flex-start;
+      }
+
+      .sb-hero__stats,
+      .sb-products__grid,
+      .sb-preview-grid,
+      .sb-features__grid,
+      .sb-testimonials__grid,
+      .sb-faq__grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sb-hero__surface {
+        min-height: 360px;
+        padding: 18px;
+      }
+
+      .sb-carousel__topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .sb-footer__meta {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .sb-cta__actions {
+        justify-content: flex-start;
       }
     }
   `;
 
   const emailTemplates = {
     minimal: {
-      name: 'Product Launch',
-      description: 'A polished launch email with product highlights, story cards, and a strong footer.',
+      name: 'Minimal Store',
+      description: 'The default storefront with all main sections.',
       components: [
         { type: 'site-header' },
         { type: 'hero-section' },
+        { type: 'feature-grid' },
         { type: 'products-section' },
         { type: 'feature-carousel' },
         { type: 'testimonials-section' },
+        { type: 'faq-section' },
         { type: 'cta-banner' },
         { type: 'site-footer' },
-      ],
+      ]
     },
     welcome: {
-      name: 'Welcome Series',
-      description: 'A clean onboarding email with benefits, a primary CTA, and a simple footer.',
+      name: 'Welcome Email',
+      description: 'A friendly greeting to new subscribers.',
       components: [
         { type: 'site-header' },
-        {
-          type: 'hero-section',
-          heroEyebrow: 'Hello {{name}}',
-          heroTitle: 'Welcome to the list. Your first curated email starts here.',
-          heroText: 'Use this template for welcome flows, onboarding sequences, or first-purchase nudges with safe export-ready email markup.',
-          heroPrimaryCta: 'Explore what is new',
-          heroSecondaryCta: 'Manage preferences',
-        },
+        { type: 'hero-section', heroTitle: 'Welcome to our community!', heroEyebrow: 'Hello {{name}}', heroText: 'We are so glad you are here. Check out some of the great features you now have access to.' },
         { type: 'feature-grid' },
-        { type: 'cta-banner', ctaTitle: 'Start with your strongest welcome CTA.', ctaPrimary: 'View collection', ctaSecondary: 'Read the guide' },
         { type: 'site-footer' }
-      ],
+      ]
     },
     newsletter: {
       name: 'Monthly Newsletter',
-      description: 'A reusable update email with editorial cards, bullet links, and a lighter promotional rhythm.',
+      description: 'A clean layout for your regular updates.',
       components: [
         { type: 'site-header' },
-        {
-          type: 'hero-section',
-          heroEyebrow: 'April Update',
-          heroTitle: "What shipped this month, and what is coming next.",
-          heroText: 'Mix top stories, product notes, release highlights, and customer updates inside one email-safe layout.',
-          heroPrimaryCta: 'Read the full issue',
-          heroSecondaryCta: 'Forward to your team',
-        },
-        {
-          type: 'custom-list',
-          listCta: 'Open release notes',
-          listItems: [
-            { label: 'New campaign builder shortcuts', url: '#' },
-            { label: 'Improved image handling for exports', url: '#' },
-            { label: 'Fresh template kits for product launches', url: '#' },
-          ],
-        },
-        { type: 'feature-carousel', carouselEyebrow: 'Top stories', carouselTitle: 'Three editorial cards for your biggest updates.' },
-        { type: 'site-footer' },
-      ],
-    },
+        { type: 'hero-section', heroTitle: "What's new this month?", heroEyebrow: 'October Update', heroText: 'Here are all the new things we shipped this month.' },
+        { type: 'custom-list', listCta: 'Read more', listItems: [{label: 'New dark mode', url: ''}, {label: 'Faster load times', url: ''}] },
+        { type: 'site-footer' }
+      ]
+    }
   };
 
   const styleManagerSectors = () => [
     {
-      name: 'Spacing',
+      name: 'Layout',
       open: true,
-      buildProps: ['width', 'max-width', 'min-height', 'margin', 'padding'],
+      buildProps: ['display', 'position', 'width', 'min-height', 'margin', 'padding'],
     },
     {
       name: 'Typography',
       open: false,
-      properties: [
-        {
-          property: 'font-family',
-          name: 'Font',
-          type: 'select',
-          default: 'Arial, Helvetica, sans-serif',
-          defaults: 'Arial, Helvetica, sans-serif',
-          options: safeFontOptions,
-        },
-        'font-size',
-        'font-weight',
-        'letter-spacing',
-        'line-height',
-        'color',
-        'text-align',
-      ],
+      buildProps: ['font-size', 'font-weight', 'letter-spacing', 'color', 'line-height', 'text-align'],
     },
     {
-      name: 'Colors',
+      name: 'Decorations',
       open: false,
-      buildProps: ['color', 'background-color', 'opacity'],
+      buildProps: ['background-color', 'background', 'border-radius', 'border', 'box-shadow', 'opacity'],
     },
     {
-      name: 'Background',
+      name: 'Flex',
       open: false,
-      buildProps: ['background-color', 'background'],
+      buildProps: ['flex-direction', 'justify-content', 'align-items', 'gap', 'flex-wrap'],
     },
     {
-      name: 'Border & Radius',
-      open: false,
-      buildProps: ['border', 'border-radius', 'box-shadow'],
-    },
-    {
-      name: 'Advanced',
+      name: 'Lists',
       open: false,
       properties: [
-        {
-          name: 'Vertical Align',
-          property: 'vertical-align',
-          type: 'select',
-          default: 'top',
-          defaults: 'top',
-          options: [
-            { id: 'top', label: 'Top' },
-            { id: 'middle', label: 'Middle' },
-            { id: 'bottom', label: 'Bottom' },
-          ],
-        },
-        {
-          name: 'Text Decoration',
-          property: 'text-decoration',
-          type: 'select',
-          default: 'none',
-          defaults: 'none',
-          options: [
-            { id: 'none', label: 'None' },
-            { id: 'underline', label: 'Underline' },
-          ],
-        },
         {
           name: 'List Style',
           property: 'list-style-type',
           type: 'select',
           default: 'disc',
-          defaults: 'disc',
           options: [
             { id: 'none', label: 'None' },
             { id: 'disc', label: 'Disc' },
@@ -1095,13 +1839,17 @@
           property: 'list-style-position',
           type: 'select',
           default: 'outside',
-          defaults: 'outside',
           options: [
             { id: 'inside', label: 'Inside' },
-            { id: 'outside', label: 'Outside' },
-          ],
-        },
-      ],
+            { id: 'outside', label: 'Outside' }
+          ]
+        }
+      ]
+    },
+    {
+      name: 'Extra',
+      open: false,
+      buildProps: ['transition', 'transform'],
     },
   ];
 
@@ -1110,31 +1858,28 @@
 
     const components = editor.DomComponents;
     const blocks = editor.BlockManager;
-    const basicSectionsCategory = opts.basicSectionsCategory || { id: 'basic-sections', label: 'Basic Sections', open: true };
-    const contentSectionsCategory = opts.contentSectionsCategory || { id: 'content-sections', label: 'Content Sections', open: true };
-    const commerceCategory = opts.commerceCategory || { id: 'ecommerce', label: 'Ecommerce', open: true };
-    const footerCategory = opts.footerCategory || { id: 'footer', label: 'Footer', open: true };
-    const specialCategory = opts.specialCategory || { id: 'special', label: 'Special', open: true };
+    const sectionCategory = opts.sectionCategory || { id: 'sections', label: 'Sections', open: true };
+    const commerceCategory = opts.commerceCategory || { id: 'commerce', label: 'Commerce', open: true };
 
     components.addType('site-header', {
       model: {
         defaults: {
-          name: 'Email Header',
-          tagName: 'div',
+          name: 'Header',
+          tagName: 'header',
           classes: ['sb-section', 'sb-header'],
           stylable: true,
-          brandInitials: 'ES',
-          brandName: 'Email Studio',
-          brandTagline: 'Production-ready email templates',
+          brandInitials: 'LUX',
+          brandName: 'Luma Studio',
+          brandTagline: 'Modern home objects',
           navItems: [
-            { label: 'Products', url: '#' },
-            { label: 'Stories', url: '#' },
-            { label: 'Pricing', url: '#' },
-            { label: 'Support', url: '#' }
+            { label: 'Shop', url: '#' },
+            { label: 'Collections', url: '#' },
+            { label: 'Journal', url: '#' },
+            { label: 'About', url: '#' }
           ],
-          secondaryCta: 'View templates',
+          secondaryCta: 'Book a tour',
           secondaryCtaLink: '#',
-          primaryCta: 'Launch campaign',
+          primaryCta: 'Start shopping',
           primaryCtaLink: '#',
           traits: [
             textTrait('brandInitials', 'Brand mark'),
@@ -1161,38 +1906,49 @@
     components.addType('hero-section', {
       model: {
         defaults: {
-          name: 'Email Hero',
-          tagName: 'div',
+          name: 'Hero Section',
+          tagName: 'section',
           classes: ['sb-section', 'sb-hero'],
           stylable: true,
-          heroEyebrow: 'New release',
-          heroTitle: 'Build polished email campaigns that are ready for real delivery.',
+          heroEyebrow: 'Quiet luxury for everyday spaces',
+          heroTitle: 'A soft white storefront for premium product stories.',
           heroText:
-            'Use this hero for launches, newsletters, onboarding flows, or promotions with a safer structure for SendGrid, Mailchimp, Klaviyo, and custom senders.',
+            'Build landing pages that feel clean, expensive, and easy to browse. Every section here is made to be dragged, duplicated, and restyled inside GrapesJS without starting from scratch.',
           heroPrimaryCta: 'Explore collection',
-          heroPrimaryCtaLink: '#',
           heroSecondaryCta: 'See lookbook',
-          heroSecondaryCtaLink: '#',
           statOneValue: '24h',
-          statOneLabel: 'Draft turnaround',
-          statTwoValue: '8',
-          statTwoLabel: 'Email-safe sections',
-          statThreeValue: '600px',
-          statThreeLabel: 'Responsive max width',
+          statOneLabel: 'Fast content updates',
+          statTwoValue: '12',
+          statTwoLabel: 'Reusable page sections',
+          statThreeValue: '98%',
+          statThreeLabel: 'Clean visual consistency',
+          heroBadge: 'New drop',
+          previewTitle: 'Minimal surfaces. Warm shadows. Clear hierarchy.',
+          previewText:
+            'The layout uses white cards, calm borders, rounded corners, and roomy spacing to keep the whole builder elegant and easy to edit.',
+          miniEyebrowOne: 'Featured',
+          miniTitleOne: 'Hero with strong conversion focus',
+          miniEyebrowTwo: 'Flexible',
+          miniTitleTwo: 'Cards and sections that can be mixed freely',
           traits: [
             textTrait('heroEyebrow', 'Eyebrow'),
             textareaTrait('heroTitle', 'Hero title'),
             textareaTrait('heroText', 'Hero text'),
             textTrait('heroPrimaryCta', 'Primary button'),
-            textTrait('heroPrimaryCtaLink', 'Primary URL'),
             textTrait('heroSecondaryCta', 'Secondary button'),
-            textTrait('heroSecondaryCtaLink', 'Secondary URL'),
             textTrait('statOneValue', 'Stat 1 value'),
             textTrait('statOneLabel', 'Stat 1 label'),
             textTrait('statTwoValue', 'Stat 2 value'),
             textTrait('statTwoLabel', 'Stat 2 label'),
             textTrait('statThreeValue', 'Stat 3 value'),
             textTrait('statThreeLabel', 'Stat 3 label'),
+            textTrait('heroBadge', 'Preview badge'),
+            textareaTrait('previewTitle', 'Preview title'),
+            textareaTrait('previewText', 'Preview text'),
+            textTrait('miniEyebrowOne', 'Mini 1 eyebrow'),
+            textTrait('miniTitleOne', 'Mini 1 title'),
+            textTrait('miniEyebrowTwo', 'Mini 2 eyebrow'),
+            textTrait('miniTitleTwo', 'Mini 2 title'),
           ],
         },
 
@@ -1204,15 +1960,20 @@
               'heroTitle',
               'heroText',
               'heroPrimaryCta',
-              'heroPrimaryCtaLink',
               'heroSecondaryCta',
-              'heroSecondaryCtaLink',
               'statOneValue',
               'statOneLabel',
               'statTwoValue',
               'statTwoLabel',
               'statThreeValue',
               'statThreeLabel',
+              'heroBadge',
+              'previewTitle',
+              'previewText',
+              'miniEyebrowOne',
+              'miniTitleOne',
+              'miniEyebrowTwo',
+              'miniTitleTwo',
             ],
             renderHero,
           );
@@ -1224,10 +1985,10 @@
       model: {
         defaults: {
           name: 'Product Card',
-          tagName: 'div',
+          tagName: 'article',
           classes: ['sb-product-card'],
           droppable: false,
-          stylable: ['background-color', 'padding', 'margin', 'border-radius', 'border'],
+          stylable: ['background-color', 'padding', 'margin', 'border-radius', 'box-shadow'],
           productTag: 'Signature',
           productName: 'Nimbus Lamp',
           productPrice: '$148',
@@ -1292,106 +2053,22 @@
       model: {
         defaults: {
           name: 'Products Section',
-          tagName: 'div',
+          tagName: 'section',
           classes: ['sb-section', 'sb-products'],
           stylable: true,
-          productsEyebrow: 'Featured products',
-          productsTitle: 'Highlight the products, bundles, or offers you want people to click first.',
+          productsEyebrow: 'Best sellers',
+          productsTitle: 'Product cards that already feel polished and store-ready.',
           productsText:
-            'These product cards are built with a safer structure for email and can be edited directly from the trait panel.',
-          productOneTag: 'Best seller',
-          productOneName: 'Nimbus Lamp',
-          productOnePrice: '$148',
-          productOneCopy: 'A warm table light with a matte finish and soft premium detailing for bedrooms, reading corners, and launch emails.',
-          productOneImage: '',
-          productOneAlt: 'Nimbus Lamp',
-          productOneButtonText: 'Shop Nimbus',
-          productOneHref: '#',
-          productOneTone: 'tone-oat',
-          productTwoTag: 'New arrival',
-          productTwoName: 'Vale Chair',
-          productTwoPrice: '$320',
-          productTwoCopy: 'Curved upholstery, softened edges, and a silhouette that works beautifully in product drops and seasonal promos.',
-          productTwoImage: '',
-          productTwoAlt: 'Vale Chair',
-          productTwoButtonText: 'See Vale',
-          productTwoHref: '#',
-          productTwoTone: 'tone-stone',
+            'Duplicate these cards, edit the content from traits, and keep the visual system clean with subtle borders, soft backgrounds, and generous spacing.',
           traits: [
             textTrait('productsEyebrow', 'Eyebrow'),
             textareaTrait('productsTitle', 'Section title'),
             textareaTrait('productsText', 'Section text'),
-            { type: 'asset-image', name: 'productOneImage', label: 'Product 1 image', changeProp: true, category: traitCategories.media },
-            { type: 'text', name: 'productOneAlt', label: 'Product 1 alt', changeProp: true, category: traitCategories.media },
-            { type: 'text', name: 'productOneTag', label: 'Product 1 tag', changeProp: true, category: traitCategories.content },
-            { type: 'text', name: 'productOneName', label: 'Product 1 name', changeProp: true, category: traitCategories.content },
-            { type: 'text', name: 'productOnePrice', label: 'Product 1 price', changeProp: true, category: traitCategories.content },
-            { type: 'text', name: 'productOneCopy', label: 'Product 1 copy', changeProp: true, category: traitCategories.content },
-            { type: 'text', name: 'productOneButtonText', label: 'Product 1 button', changeProp: true, category: traitCategories.action },
-            { type: 'text', name: 'productOneHref', label: 'Product 1 URL', changeProp: true, category: traitCategories.action },
-            {
-              type: 'select',
-              name: 'productOneTone',
-              label: 'Product 1 tone',
-              changeProp: true,
-              category: traitCategories.content,
-              options: [
-                { id: 'tone-oat', label: 'Oat' },
-                { id: 'tone-stone', label: 'Stone' },
-                { id: 'tone-sage', label: 'Sage' },
-              ],
-            },
-            { type: 'asset-image', name: 'productTwoImage', label: 'Product 2 image', changeProp: true, category: traitCategories.media },
-            { type: 'text', name: 'productTwoAlt', label: 'Product 2 alt', changeProp: true, category: traitCategories.media },
-            { type: 'text', name: 'productTwoTag', label: 'Product 2 tag', changeProp: true, category: traitCategories.content },
-            { type: 'text', name: 'productTwoName', label: 'Product 2 name', changeProp: true, category: traitCategories.content },
-            { type: 'text', name: 'productTwoPrice', label: 'Product 2 price', changeProp: true, category: traitCategories.content },
-            { type: 'text', name: 'productTwoCopy', label: 'Product 2 copy', changeProp: true, category: traitCategories.content },
-            { type: 'text', name: 'productTwoButtonText', label: 'Product 2 button', changeProp: true, category: traitCategories.action },
-            { type: 'text', name: 'productTwoHref', label: 'Product 2 URL', changeProp: true, category: traitCategories.action },
-            {
-              type: 'select',
-              name: 'productTwoTone',
-              label: 'Product 2 tone',
-              changeProp: true,
-              category: traitCategories.content,
-              options: [
-                { id: 'tone-oat', label: 'Oat' },
-                { id: 'tone-stone', label: 'Stone' },
-                { id: 'tone-sage', label: 'Sage' },
-              ],
-            },
           ],
         },
 
         init() {
-          bindRenderer(
-            this,
-            [
-              'productsEyebrow',
-              'productsTitle',
-              'productsText',
-              'productOneTag',
-              'productOneName',
-              'productOnePrice',
-              'productOneCopy',
-              'productOneImage',
-              'productOneAlt',
-              'productOneButtonText',
-              'productOneHref',
-              'productOneTone',
-              'productTwoTag',
-              'productTwoName',
-              'productTwoPrice',
-              'productTwoCopy',
-              'productTwoImage',
-              'productTwoAlt',
-              'productTwoButtonText',
-              'productTwoHref',
-              'productTwoTone',
-            ],
-            renderProductsSection,
-          );
+          bindRenderer(this, ['productsEyebrow', 'productsTitle', 'productsText'], renderProductsSection);
         },
       },
     });
@@ -1399,29 +2076,29 @@
     components.addType('feature-carousel', {
       model: {
         defaults: {
-          name: 'Story Cards',
-          tagName: 'div',
+          name: 'Carousel',
+          tagName: 'section',
           classes: ['sb-section', 'sb-carousel'],
           stylable: true,
-          carouselEyebrow: 'Top stories',
-          carouselTitle: 'Three editorial cards for launches, updates, and feature highlights.',
+          carouselEyebrow: 'Featured stories',
+          carouselTitle: 'A carousel section for launches, promos, and premium highlights.',
           carouselText:
-            'Use this block when you need quick cards for campaign highlights but still want the output to stay email-safe.',
-          slideOneTitle: 'Lead with your most important release or featured collection.',
+            'Use this block for rotating product narratives, campaign cards, or seasonal collections with just a few clicks.',
+          slideOneTitle: 'Hero-style product storytelling with room for benefits and calls to action.',
           slideOneText:
-            'Keep the copy concise, add one strong CTA, and let the first story set the tone for the rest of the email.',
+            'Pair strong copy with a visual panel so every featured collection feels considered, elevated, and easy to scan on both desktop and mobile.',
           slideOneCta: 'Open campaign',
-          slideOneHref: '#',
-          slideTwoTitle: 'Give the second card to a supporting offer, bundle, or helpful guide.',
+          slideTwoTitle: 'Showcase bundles, seasonal edits, or bestselling product groups in a softer layout.',
           slideTwoText:
-            'This format works well for content-led newsletters, product education, or secondary conversion paths.',
+            'The carousel keeps the page dynamic without adding visual noise, which helps the overall builder stay minimal and attractive.',
           slideTwoCta: 'View bundle',
-          slideTwoHref: '#',
-          slideThreeTitle: 'Reserve the third card for urgency, proof, or a final optional click.',
+          slideThreeTitle: 'Promote limited drops with a controlled, editorial feel instead of a loud slider.',
           slideThreeText:
-            'Because the cards are static, the export stays cleaner and more dependable across inboxes than a web-style slider.',
+            'This section gives you motion and variation while still fitting the white, premium theme used by the rest of the page.',
           slideThreeCta: 'See new drop',
-          slideThreeHref: '#',
+          autoplay: true,
+          interval: 4200,
+          'script-props': ['autoplay', 'interval'],
           traits: [
             textTrait('carouselEyebrow', 'Eyebrow'),
             textareaTrait('carouselTitle', 'Section title'),
@@ -1429,16 +2106,99 @@
             textareaTrait('slideOneTitle', 'Slide 1 title'),
             textareaTrait('slideOneText', 'Slide 1 text'),
             textTrait('slideOneCta', 'Slide 1 button'),
-            textTrait('slideOneHref', 'Slide 1 URL'),
             textareaTrait('slideTwoTitle', 'Slide 2 title'),
             textareaTrait('slideTwoText', 'Slide 2 text'),
             textTrait('slideTwoCta', 'Slide 2 button'),
-            textTrait('slideTwoHref', 'Slide 2 URL'),
             textareaTrait('slideThreeTitle', 'Slide 3 title'),
             textareaTrait('slideThreeText', 'Slide 3 text'),
             textTrait('slideThreeCta', 'Slide 3 button'),
-            textTrait('slideThreeHref', 'Slide 3 URL'),
+            checkboxTrait('autoplay', 'Autoplay'),
+            numberTrait('interval', 'Autoplay delay'),
           ],
+          script: function (props) {
+            const root = this;
+            if (root.__sbCarouselCleanup) root.__sbCarouselCleanup();
+
+            const track = root.querySelector('[data-carousel-track]');
+            const slides = Array.prototype.slice.call(root.querySelectorAll('[data-carousel-slide]'));
+            const dots = Array.prototype.slice.call(root.querySelectorAll('[data-carousel-dot]'));
+            const prev = root.querySelector('[data-carousel-prev]');
+            const next = root.querySelector('[data-carousel-next]');
+
+            if (!track || !slides.length) return;
+
+            let index = 0;
+            let timer = null;
+
+            const render = (nextIndex) => {
+              index = (nextIndex + slides.length) % slides.length;
+              track.style.transform = 'translateX(-' + index * 100 + '%)';
+              dots.forEach((dot, dotIndex) => {
+                dot.style.background = dotIndex === index ? '#111827' : '#d6d3d1';
+                dot.setAttribute('aria-pressed', dotIndex === index ? 'true' : 'false');
+              });
+            };
+
+            const stop = () => {
+              if (timer) {
+                clearInterval(timer);
+                timer = null;
+              }
+            };
+
+            const start = () => {
+              stop();
+              if (!props.autoplay) return;
+              const delay = Math.max(2000, Number(props.interval) || 4200);
+              timer = setInterval(() => render(index + 1), delay);
+            };
+
+            const onPrev = () => {
+              render(index - 1);
+              start();
+            };
+
+            const onNext = () => {
+              render(index + 1);
+              start();
+            };
+
+            const onEnter = () => stop();
+            const onLeave = () => start();
+
+            if (prev) prev.addEventListener('click', onPrev);
+            if (next) next.addEventListener('click', onNext);
+
+            dots.forEach((dot, dotIndex) => {
+              const onClick = () => {
+                render(dotIndex);
+                start();
+              };
+
+              dot.__sbDotHandler = onClick;
+              dot.addEventListener('click', onClick);
+            });
+
+            root.addEventListener('mouseenter', onEnter);
+            root.addEventListener('mouseleave', onLeave);
+
+            render(0);
+            start();
+
+            root.__sbCarouselCleanup = () => {
+              stop();
+              if (prev) prev.removeEventListener('click', onPrev);
+              if (next) next.removeEventListener('click', onNext);
+              dots.forEach((dot) => {
+                if (dot.__sbDotHandler) {
+                  dot.removeEventListener('click', dot.__sbDotHandler);
+                  delete dot.__sbDotHandler;
+                }
+              });
+              root.removeEventListener('mouseenter', onEnter);
+              root.removeEventListener('mouseleave', onLeave);
+            };
+          },
         },
 
         init() {
@@ -1451,15 +2211,12 @@
               'slideOneTitle',
               'slideOneText',
               'slideOneCta',
-              'slideOneHref',
               'slideTwoTitle',
               'slideTwoText',
               'slideTwoCta',
-              'slideTwoHref',
               'slideThreeTitle',
               'slideThreeText',
               'slideThreeCta',
-              'slideThreeHref',
             ],
             renderCarousel,
           );
@@ -1470,20 +2227,20 @@
     components.addType('feature-grid', {
       model: {
         defaults: {
-          name: 'Benefits Grid',
-          tagName: 'div',
+          name: 'Features Grid',
+          tagName: 'section',
           classes: ['sb-section', 'sb-features'],
           stylable: true,
           featuresEyebrow: 'Why it works',
-          featuresTitle: 'Explain the key reasons this email or offer deserves attention.',
+          featuresTitle: 'More custom blocks with cleaner settings in the right sidebar.',
           featuresText:
-            'These cards are useful for onboarding points, differentiators, shipping details, or launch benefits.',
-          featureOneTitle: 'Email-safe markup',
-          featureOneText: 'The sections are structured for easier export into real sending platforms and common inbox clients.',
-          featureTwoTitle: 'Clean editing flow',
-          featureTwoText: 'Update headlines, links, buttons, and product details without hunting through the canvas.',
-          featureThreeTitle: 'Reusable sections',
-          featureThreeText: 'Mix product, story, proof, FAQ, and footer blocks into one coherent email system.',
+            'Every section below is designed so you can drag it in and then edit meaningful content from the right panel without hunting around the canvas.',
+          featureOneTitle: 'Clear component settings',
+          featureOneText: 'Select the section and edit titles, paragraphs, and button labels directly from traits.',
+          featureTwoTitle: 'Soft white visual system',
+          featureTwoText: 'All cards, panels, and content surfaces stay consistent with the light minimal theme.',
+          featureThreeTitle: 'Reusable commerce sections',
+          featureThreeText: 'Mix hero blocks, product grids, testimonials, FAQ rows, and CTA strips on one page.',
           traits: [
             textTrait('featuresEyebrow', 'Eyebrow'),
             textareaTrait('featuresTitle', 'Section title'),
@@ -1521,13 +2278,13 @@
       model: {
         defaults: {
           name: 'Testimonials',
-          tagName: 'div',
+          tagName: 'section',
           classes: ['sb-section', 'sb-testimonials'],
           stylable: true,
-          testimonialsEyebrow: 'Social proof',
-          testimonialsTitle: 'Add customer proof, partner notes, or short review quotes.',
+          testimonialsEyebrow: 'Client feedback',
+          testimonialsTitle: 'Testimonial cards for social proof and premium trust signals.',
           testimonialsText:
-            'This section works well after a hero, product story, or launch message when you need trust before the next CTA.',
+            'Drop this section anywhere on the page and update the quote copy from the right side panel.',
           quoteOne:
             '"The white layout finally made our catalog feel premium instead of crowded. Editing sections is much faster now."',
           quoteOneName: 'Aarav Malhotra',
@@ -1583,19 +2340,19 @@
       model: {
         defaults: {
           name: 'FAQ Section',
-          tagName: 'div',
+          tagName: 'section',
           classes: ['sb-section', 'sb-faq'],
           stylable: true,
           faqEyebrow: 'Common questions',
-          faqTitle: 'Answer the questions that usually block clicks or conversions.',
+          faqTitle: 'FAQ cards for product, shipping, and service details.',
           faqText:
-            'Use it for product details, shipping notes, plan questions, or campaign clarifications without sending readers away.',
-          faqOneQuestion: 'Will this export work with common email senders?',
-          faqOneAnswer: 'Yes. The builder is optimized around production HTML export for platforms like SendGrid, Mailchimp, Klaviyo, and custom senders.',
-          faqTwoQuestion: 'Can I swap content without changing the layout?',
-          faqTwoAnswer: 'Yes. Most common content edits happen through the trait panel, so you can keep structure consistent while changing copy and links.',
-          faqThreeQuestion: 'What should I avoid in email blocks?',
-          faqThreeAnswer: 'Avoid scripts, web widgets, and complex browser-only interactions. The builder favors safer structures for inbox rendering.',
+            'Use this section when visitors need reassurance before buying. The answers can be updated directly from the sidebar.',
+          faqOneQuestion: 'Can I reuse these sections on multiple pages?',
+          faqOneAnswer: 'Yes. Duplicate the blocks, drag them into other pages, and update the content from traits or inline text editing.',
+          faqTwoQuestion: 'Why were my section settings hard to edit before?',
+          faqTwoAnswer: 'The editor was still using the default loose layout. This setup gives traits and styles their own fixed right sidebar.',
+          faqThreeQuestion: 'Can I still style smaller elements inside a section?',
+          faqThreeAnswer: 'Yes. Select inner buttons, headings, or cards for styling, or select the section itself for content-level settings.',
           traits: [
             textTrait('faqEyebrow', 'Eyebrow'),
             textareaTrait('faqTitle', 'Section title'),
@@ -1633,34 +2390,26 @@
       model: {
         defaults: {
           name: 'CTA Banner',
-          tagName: 'div',
+          tagName: 'section',
           classes: ['sb-section', 'sb-cta'],
           stylable: true,
           ctaEyebrow: 'Ready to launch',
-          ctaTitle: 'Close with a clear action before the footer.',
+          ctaTitle: 'Add one final conversion block at the bottom of the page.',
           ctaText:
-            'Use this area for signups, demos, launches, or one final promo before the footer.',
+            'This section works well before the footer for signups, demos, product launches, or store entry points.',
           ctaPrimary: 'Launch collection',
-          ctaPrimaryLink: '#',
           ctaSecondary: 'Talk to sales',
-          ctaSecondaryLink: '#',
           traits: [
             textTrait('ctaEyebrow', 'Eyebrow'),
             textareaTrait('ctaTitle', 'Banner title'),
             textareaTrait('ctaText', 'Banner text'),
             textTrait('ctaPrimary', 'Primary button'),
-            textTrait('ctaPrimaryLink', 'Primary URL'),
             textTrait('ctaSecondary', 'Secondary button'),
-            textTrait('ctaSecondaryLink', 'Secondary URL'),
           ],
         },
 
         init() {
-          bindRenderer(
-            this,
-            ['ctaEyebrow', 'ctaTitle', 'ctaText', 'ctaPrimary', 'ctaPrimaryLink', 'ctaSecondary', 'ctaSecondaryLink'],
-            renderCtaBanner,
-          );
+          bindRenderer(this, ['ctaEyebrow', 'ctaTitle', 'ctaText', 'ctaPrimary', 'ctaSecondary'], renderCtaBanner);
         },
       },
     });
@@ -1668,35 +2417,35 @@
     components.addType('site-footer', {
       model: {
         defaults: {
-          name: 'Email Footer',
-          tagName: 'div',
+          name: 'Footer',
+          tagName: 'footer',
           classes: ['sb-section', 'sb-footer'],
           stylable: true,
-          footerInitials: 'ES',
-          footerBrand: 'Email Studio',
-          footerTagline: 'Production-ready campaigns with safer export',
+          footerInitials: 'LUX',
+          footerBrand: 'Luma Studio',
+          footerTagline: 'Minimal commerce pages with calm hierarchy',
           footerText:
-            'Use the footer for company details, support links, compliance links, and a final brand reminder without overpowering the email.',
-          footerMetaLeft: 'You are receiving this email because you subscribed to product updates.',
-          footerMetaRight: '2026 Email Studio. All rights reserved.',
-          col1Title: 'Browse',
+            'Build polished storefront pages faster with reusable sections, subtle depth, and a quiet white palette that keeps your products at the center.',
+          footerMetaLeft: 'Designed for a calm, premium builder experience.',
+          footerMetaRight: '2026 Luma Studio. All rights reserved.',
+          col1Title: 'Navigate',
           col1Links: [
-            { label: 'Templates', url: '#' },
-            { label: 'Launches', url: '#' },
-            { label: 'Newsletter archive', url: '#' },
+            { label: 'Shop', url: '#' },
+            { label: 'Collections', url: '#' },
+            { label: 'Journal', url: '#' },
             { label: 'Support', url: '#' }
           ],
           col2Title: 'Company',
           col2Links: [
             { label: 'About', url: '#' },
-            { label: 'Pricing', url: '#' },
-            { label: 'API', url: '#' },
+            { label: 'Studio visits', url: '#' },
+            { label: 'Careers', url: '#' },
             { label: 'Contact', url: '#' }
           ],
-          col3Title: 'Contact',
+          col3Title: 'Visit',
           col3Text1: '12 Horizon Lane',
           col3Text2: 'New Delhi, India',
-          col3Text3: 'hello@emailstudio.dev',
+          col3Text3: 'hello@lumastudio.dev',
           traits: [
             textTrait('footerInitials', 'Brand mark'),
             textTrait('footerBrand', 'Brand name'),
@@ -1757,90 +2506,90 @@
     });
 
     blocks.add('site-header', {
-      label: blockLabel('HD', 'Header', 'Brand intro, quick links, and top CTA'),
-      category: contentSectionsCategory,
+      label: blockLabel('HD', 'Header', 'Brand, links, and call to action'),
+      category: sectionCategory,
       select: true,
       content: { type: 'site-header' },
     });
 
     blocks.add('hero-section', {
-      label: blockLabel('HR', 'Hero', 'Primary message, buttons, and stats'),
-      category: contentSectionsCategory,
+      label: blockLabel('HR', 'Hero', 'Big headline and conversion area'),
+      category: sectionCategory,
       select: true,
       content: { type: 'hero-section' },
     });
 
     blocks.add('feature-grid', {
-      label: blockLabel('FG', 'Benefits', 'Three-card value or feature section'),
-      category: contentSectionsCategory,
+      label: blockLabel('FG', 'Features Grid', 'Three-card benefits section'),
+      category: sectionCategory,
       select: true,
       content: { type: 'feature-grid' },
     });
 
     blocks.add('products-section', {
-      label: blockLabel('PG', 'Products', 'Two editable product cards with CTAs'),
+      label: blockLabel('PG', 'Products Grid', 'Three polished product cards'),
       category: commerceCategory,
       select: true,
       content: { type: 'products-section' },
     });
 
     blocks.add('product-card', {
-      label: blockLabel('PC', 'Product Card', 'Single offer card with image, price, and CTA'),
+      label: blockLabel('PC', 'Product Card', 'Single card with editable traits'),
       category: commerceCategory,
       select: true,
       content: { type: 'product-card' },
     });
 
     blocks.add('feature-carousel', {
-      label: blockLabel('CR', 'Story Cards', 'Three stacked editorial promo cards'),
-      category: contentSectionsCategory,
+      label: blockLabel('CR', 'Carousel', 'Sliding campaign showcase'),
+      category: sectionCategory,
       select: true,
       content: { type: 'feature-carousel' },
     });
 
     blocks.add('testimonials-section', {
-      label: blockLabel('TS', 'Testimonials', 'Three social-proof quote cards'),
-      category: contentSectionsCategory,
+      label: blockLabel('TS', 'Testimonials', 'Three clean quote cards'),
+      category: sectionCategory,
       select: true,
       content: { type: 'testimonials-section' },
     });
 
     blocks.add('faq-section', {
-      label: blockLabel('FQ', 'FAQ', 'Stacked questions and answers'),
-      category: contentSectionsCategory,
+      label: blockLabel('FQ', 'FAQ', 'Question and answer cards'),
+      category: sectionCategory,
       select: true,
       content: { type: 'faq-section' },
     });
 
     blocks.add('cta-banner', {
-      label: blockLabel('CT', 'CTA Banner', 'Strong closing action before the footer'),
-      category: contentSectionsCategory,
+      label: blockLabel('CT', 'CTA Banner', 'Bottom conversion section'),
+      category: sectionCategory,
       select: true,
       content: { type: 'cta-banner' },
     });
 
     blocks.add('site-footer', {
-      label: blockLabel('FT', 'Footer', 'Footer with links, contact details, and meta'),
-      category: footerCategory,
+      label: blockLabel('FT', 'Footer', 'Soft multi-column footer'),
+      category: sectionCategory,
       select: true,
       content: { type: 'site-footer' },
     });
 
-    const basicCategory = { id: 'content-elements', label: 'Content Elements', open: true };
+    const basicCategory = { id: 'basic', label: 'Basic Elements', open: true };
 
     blocks.add('text', {
-      label: blockLabel('TXT', 'Text', 'Simple editable email copy'),
+      label: blockLabel('TXT', 'Text', 'Insert simple text'),
       category: basicCategory,
       content: {
         type: 'text',
         content: 'Insert your text here',
-        style: { padding: '10px', 'font-size': '15px', 'line-height': '1.7', color: '#334155' },
+        style: { padding: '10px' },
         activeOnRender: 1
       }
     });
 
     blocks.add('link', {
-      label: blockLabel('LNK', 'Link', 'Inline email link'),
+      label: blockLabel('LNK', 'Link', 'Insert a link'),
       category: basicCategory,
       content: {
         type: 'link',
@@ -1850,126 +2599,67 @@
     });
 
     blocks.add('image', {
-      label: blockLabel('IMG', 'Image', 'Responsive email image'),
+      label: blockLabel('IMG', 'Image', 'Insert an image'),
       category: basicCategory,
-      content: '<img src="https://picsum.photos/id/1060/900/700" alt="Email image" style="display:block; width:100%; max-width:560px; height:auto; border:0; outline:none; text-decoration:none; margin:0 auto;" />'
+      content: {
+        type: 'image',
+        style: { color: 'black' }
+      }
     });
 
-    blocks.add('spacer', {
-      label: blockLabel('SP', 'Spacer', 'Insert vertical spacing'),
+    blocks.add('video', {
+      label: blockLabel('VID', 'Video', 'Insert a video player'),
       category: basicCategory,
-      content: `
-        <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
-          <tr>
-            <td height="32" style="font-size:0; line-height:0;">&nbsp;</td>
-          </tr>
-        </table>
-      `
+      content: {
+        type: 'video',
+        src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        style: { height: '350px', width: '100%' }
+      }
     });
 
     blocks.add('button', {
-      label: blockLabel('BTN', 'Button', 'Email-safe call-to-action'),
+      label: blockLabel('BTN', 'Button', 'Insert a CTA button'),
       category: basicCategory,
-      content: renderButton('Click me', '#')
+      content: '<a class="sb-button sb-button--primary" href="#">Click me</a>'
     });
 
     blocks.add('divider', {
-      label: blockLabel('DIV', 'Divider', 'Subtle content separator'),
+      label: blockLabel('DIV', 'Divider', 'Insert a horizontal line'),
       category: basicCategory,
-      content: `
-        <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
-          <tr>
-            <td style="padding:20px 0;">
-              <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="border-top:1px solid #e7e5e4; font-size:0; line-height:0;">&nbsp;</td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
-      `
+      content: '<hr style="border: none; border-top: 1px solid #e7e5e4; margin: 20px 0;" />'
     });
 
     blocks.add('list', {
-      label: blockLabel('LST', 'List', 'Bullet list with optional CTA'),
+      label: blockLabel('LST', 'List Items', 'Insert a bullet list'),
       category: basicCategory,
       select: true,
       content: { type: 'custom-list' }
     });
 
     blocks.add('section-1', {
-      label: blockLabel('S1', '1 Column', 'Single email-safe content column'),
-      category: basicSectionsCategory,
+      label: blockLabel('S1', '1 Section', 'Single column block'),
+      category: basicCategory,
       content: `
-        <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="border:1px dashed rgba(15,23,42,0.14);">
-          <tr>
-            <td style="padding:20px;">
-              <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="border:1px dashed rgba(15,23,42,0.08);">
-                <tr>
-                  <td height="56" style="font-size:0; line-height:0;">&nbsp;</td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
+        <div style="padding: 20px; display: block; border: 1px dashed rgba(0,0,0,0.1);">
+          <div style="min-height: 50px;"></div>
+        </div>
       `
     });
 
     blocks.add('section-1-3', {
-      label: blockLabel('S3', '3 Columns', 'Three email-safe columns'),
-      category: basicSectionsCategory,
+      label: blockLabel('S3', '1/3 Section', 'Three columns block'),
+      category: basicCategory,
       content: `
-        <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="border:1px dashed rgba(15,23,42,0.14);">
-          <tr>
-            <td style="padding:20px;">
-              <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td class="responsive-td" width="33.33%" style="padding:0 8px 0 0;">
-                    <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="border:1px dashed rgba(15,23,42,0.08);">
-                      <tr><td height="56" style="font-size:0; line-height:0;">&nbsp;</td></tr>
-                    </table>
-                  </td>
-                  <td class="responsive-td" width="33.33%" style="padding:0 8px;">
-                    <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="border:1px dashed rgba(15,23,42,0.08);">
-                      <tr><td height="56" style="font-size:0; line-height:0;">&nbsp;</td></tr>
-                    </table>
-                  </td>
-                  <td class="responsive-td" width="33.33%" style="padding:0 0 0 8px;">
-                    <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="border:1px dashed rgba(15,23,42,0.08);">
-                      <tr><td height="56" style="font-size:0; line-height:0;">&nbsp;</td></tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
+        <div style="display: flex; flex-wrap: wrap; padding: 20px; gap: 20px; border: 1px dashed rgba(0,0,0,0.1);">
+          <div style="flex: 1; min-height: 50px; border: 1px dashed rgba(0,0,0,0.05);"></div>
+          <div style="flex: 1; min-height: 50px; border: 1px dashed rgba(0,0,0,0.05);"></div>
+          <div style="flex: 1; min-height: 50px; border: 1px dashed rgba(0,0,0,0.05);"></div>
+        </div>
       `
     });
 
-    blocks.add('social-links', {
-      label: blockLabel('SOC', 'Social', 'Email-safe social links row'),
-      category: specialCategory,
-      content: `
-        <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
-          <tr>
-            <td align="center" style="padding:12px 0;">
-              ${renderInlineLinks(
-        [
-          { label: 'Instagram', url: '#' },
-          { label: 'LinkedIn', url: '#' },
-          { label: 'X', url: '#' },
-        ],
-        { color: '#0f766e', fontSize: '13px', fontWeight: '700' },
-      )}
-            </td>
-          </tr>
-        </table>
-      `,
-    });
-
-    const emailCategory = { id: 'email', label: 'Merge Tags', open: true };
+    const emailCategory = { id: 'email', label: 'Email Tags', open: true };
+Tags', open: true };
 
     blocks.add('tag-name', {
       label: blockLabel('NM', 'Name', 'Insert {{name}} variable'),

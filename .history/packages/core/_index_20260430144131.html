@@ -1,0 +1,1584 @@
+﻿<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>GrapesJS Minimal Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Manrope:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="dist/css/grapes.min.css" />
+  <script src="grapes.min.js"></script>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      --gjs-main-color: #ffffff;
+      --gjs-primary-color: #ffffff;
+      --gjs-secondary-color: #111827;
+      --gjs-tertiary-color: #e7e5e4;
+      --gjs-quaternary-color: #0f172a;
+      --gjs-font-color: #334155;
+      --gjs-font-color-active: #111827;
+      --gjs-main-dark-color: rgba(15, 23, 42, 0.08);
+      --gjs-secondary-dark-color: rgba(15, 23, 42, 0.04);
+      --gjs-main-light-color: rgba(255, 255, 255, 0.85);
+      --gjs-secondary-light-color: rgba(15, 23, 42, 0.68);
+      --gjs-soft-light-color: rgba(148, 163, 184, 0.08);
+      --gjs-color-blue: #2563eb;
+      --gjs-color-red: #dc2626;
+      --gjs-color-yellow: #f59e0b;
+      --gjs-color-green: #10b981;
+      --gjs-color-highlight: #0f766e;
+      --gjs-color-warn: #f59e0b;
+      --gjs-light-border: rgba(15, 23, 42, 0.08);
+      --gjs-arrow-color: rgba(15, 23, 42, 0.45);
+      --gjs-dark-text-shadow: rgba(15, 23, 42, 0.08);
+      --gjs-main-font: 'Segoe UI', 'Helvetica Neue', sans-serif;
+      --gjs-font-size: 13px;
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.95), transparent 32%),
+        linear-gradient(180deg, #f8f7f4 0%, #f1efeb 100%);
+      color: #111827;
+      overflow: hidden;
+    }
+
+    .builder-shell {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      height: 100%;
+    }
+
+    .builder-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(18px);
+    }
+
+    .builder-topbar__brand {
+      display: grid;
+      gap: 2px;
+    }
+
+    .builder-topbar__brand strong {
+      font-size: 15px;
+      letter-spacing: 0.04em;
+    }
+
+    .builder-topbar__brand span,
+    .builder-topbar__hint {
+      color: #57534e;
+      font-size: 13px;
+    }
+
+    .builder-topbar__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .builder-button,
+    .builder-select {
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      background: #ffffff;
+      color: #111827;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .builder-button--primary {
+      background: #111827;
+      color: #ffffff;
+      border-color: #111827;
+    }
+
+    .builder-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      color: #57534e;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .builder-status::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #94a3b8;
+    }
+
+    .builder-status[data-state='saving']::before {
+      background: #f59e0b;
+    }
+
+    .builder-status[data-state='saved']::before {
+      background: #10b981;
+    }
+
+    .builder-status[data-state='error']::before {
+      background: #dc2626;
+    }
+
+    .builder-workspace {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr) 360px;
+      min-height: 0;
+    }
+
+    .builder-sidebar,
+    .builder-canvas {
+      min-height: 0;
+    }
+
+    .builder-sidebar {
+      padding: 16px;
+      display: grid;
+      gap: 16px;
+      overflow: auto;
+    }
+
+    .builder-sidebar--left {
+      border-right: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .builder-sidebar--right {
+      border-left: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .builder-panel {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      min-height: 0;
+      border: 1px solid rgba(231, 229, 228, 0.95);
+      border-radius: 26px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 24px 56px rgba(15, 23, 42, 0.07);
+      overflow: hidden;
+    }
+
+    .builder-panel__header {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(250, 249, 247, 0.92));
+    }
+
+    .builder-panel__header strong {
+      display: block;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+    }
+
+    .builder-panel__header span {
+      display: block;
+      margin-top: 4px;
+      color: #78716c;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .builder-panel__content {
+      min-height: 0;
+      overflow: auto;
+    }
+
+    .builder-panel__content--fill {
+      display: grid;
+    }
+
+    .builder-canvas {
+      min-width: 0;
+      padding: 0;
+    }
+
+    .builder-canvas__frame {
+      height: 100%;
+      min-height: 0;
+      border-left: 1px solid rgba(231, 229, 228, 0.95);
+      border-right: 1px solid rgba(231, 229, 228, 0.95);
+      border-radius: 0;
+      background: rgba(255, 255, 255, 1);
+      overflow: hidden;
+    }
+
+    #gjs {
+      height: 100%;
+      width: 100%;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    .gjs-editor,
+    .gjs-one-bg,
+    .gjs-two-color,
+    .gjs-three-bg,
+    .gjs-four-color {
+      color: inherit;
+    }
+
+    .gjs-editor {
+      background: transparent;
+    }
+
+    .gjs-cv-canvas {
+      width: 100%;
+
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(248, 247, 244, 0.92)),
+        linear-gradient(135deg, rgba(203, 213, 225, 0.18), transparent 40%);
+    }
+
+    .gjs-blocks-c,
+    .gjs-sm-sectors,
+    .gjs-trt-traits,
+    .gjs-layers,
+    .gjs-clm-tags {
+      background: transparent;
+    }
+
+    .gjs-block-category,
+    .gjs-sm-sector,
+    .gjs-trt-trait,
+    .gjs-layer {
+      border-color: rgba(15, 23, 42, 0.08);
+    }
+
+    .gjs-block-category {
+      border-bottom: 1px solid rgba(15, 23, 42, 0.07);
+    }
+
+    .gjs-title,
+    .gjs-sm-sector-title,
+    .gjs-layer-title,
+    .gjs-trt-trait__label {
+      letter-spacing: 0.02em;
+    }
+
+    .gjs-block {
+      margin: 12px;
+      padding: 12px;
+      border: 1px solid rgba(15, 23, 42, 0.07);
+      border-radius: 20px;
+      background: linear-gradient(180deg, #ffffff 0%, #fbfaf8 100%);
+      box-shadow: 0 16px 32px rgba(15, 23, 42, 0.05);
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+    }
+
+    .gjs-block:hover {
+      transform: translateY(-2px);
+      border-color: rgba(37, 99, 235, 0.22);
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+    }
+
+    .gjs-field,
+    .gjs-input-holder input,
+    .gjs-input-holder select,
+    .gjs-input-holder textarea {
+      border-radius: 12px;
+    }
+
+    .gjs-sm-sectors .gjs-sm-sector,
+    .gjs-trt-traits .gjs-trt-trait,
+    .gjs-layer {
+      background: rgba(255, 255, 255, 0.66);
+    }
+
+    .sb-trait-asset {
+      display: grid;
+      gap: 10px;
+    }
+
+    .sb-trait-asset__row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .sb-trait-asset__input {
+      width: 100%;
+    }
+
+    .sb-trait-asset__button {
+      padding: 9px 12px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 12px;
+      background: #111827;
+      color: #ffffff;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .sb-trait-asset__preview {
+      min-height: 88px;
+      border: 1px dashed rgba(15, 23, 42, 0.16);
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 247, 244, 0.92));
+      color: #78716c;
+      font-size: 12px;
+    }
+
+    .sb-trait-asset__preview:empty::before {
+      content: attr(data-empty);
+    }
+
+    .sb-trait-asset__preview img {
+      display: block;
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+    }
+
+    .builder-note {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+      background: rgba(248, 247, 244, 0.9);
+      color: #57534e;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .builder-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(15, 23, 42, 0.42);
+      z-index: 1000;
+    }
+
+    .builder-modal.open {
+      display: flex;
+    }
+
+    .builder-modal__content {
+      width: min(760px, 100%);
+      max-height: min(86vh, 920px);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+      border-radius: 28px;
+      background: #ffffff;
+      box-shadow: 0 32px 90px rgba(15, 23, 42, 0.24);
+    }
+
+    .builder-modal__content--wide {
+      width: min(980px, 100%);
+    }
+
+    .builder-modal__header,
+    .builder-modal__footer {
+      padding: 18px 20px;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .builder-modal__footer {
+      border-bottom: 0;
+      border-top: 1px solid rgba(15, 23, 42, 0.08);
+      flex-wrap: wrap;
+    }
+
+    .builder-modal__header h2 {
+      margin: 0;
+      font-size: 20px;
+      color: #111827;
+    }
+
+    .builder-modal__header p,
+    .builder-modal__hint {
+      margin: 6px 0 0;
+      color: #57534e;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .builder-modal__close {
+      width: 38px;
+      height: 38px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 999px;
+      background: #ffffff;
+      color: #111827;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .template-grid {
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      overflow: auto;
+    }
+
+    .template-card {
+      padding: 20px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 22px;
+      background: linear-gradient(180deg, #ffffff 0%, #faf8f5 100%);
+      cursor: pointer;
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+    }
+
+    .template-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(37, 99, 235, 0.24);
+      box-shadow: 0 22px 44px rgba(15, 23, 42, 0.08);
+    }
+
+    .template-card h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+      color: #111827;
+    }
+
+    .template-card p {
+      margin: 0;
+      color: #57534e;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .export-code {
+      width: 100%;
+      height: 100%;
+      padding: 20px;
+      border: 0;
+      resize: none;
+      font: 12px/1.65 Consolas, 'Courier New', monospace;
+      color: #0f172a;
+      background: #f8fafc;
+      box-sizing: border-box;
+    }
+
+    .builder-toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      min-width: 240px;
+      max-width: min(420px, calc(100vw - 44px));
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #111827;
+      color: #ffffff;
+      box-shadow: 0 20px 44px rgba(15, 23, 42, 0.26);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+      transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+      z-index: 1100;
+    }
+
+    .builder-toast.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    body {
+      --builder-preview-width: 800px;
+      font-family: 'Manrope', 'Segoe UI', sans-serif;
+    }
+
+    .builder-shell {
+      gap: 16px;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .builder-topbar {
+      padding: 18px 20px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.82);
+      box-shadow: 0 24px 56px rgba(15, 23, 42, 0.07);
+    }
+
+    .builder-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .builder-brand__mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #0f172a 0%, #334155 100%);
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      flex-shrink: 0;
+    }
+
+    .builder-brand__copy {
+      display: grid;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .builder-brand__copy strong {
+      font-size: 16px;
+      letter-spacing: -0.02em;
+      color: #111827;
+    }
+
+    .builder-brand__copy span {
+      color: #57534e;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .builder-workspace {
+      gap: 16px;
+    }
+
+    .builder-sidebar {
+      padding: 0;
+      gap: 16px;
+      overflow: hidden;
+    }
+
+    .builder-panel {
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 24px 56px rgba(15, 23, 42, 0.07);
+    }
+
+    .builder-panel--library,
+    .builder-panel--inspector {
+      grid-template-rows: auto auto auto minmax(0, 1fr);
+      height: 100%;
+    }
+
+    .builder-panel--help {
+      grid-template-rows: auto auto;
+    }
+
+    .builder-panel__header strong {
+      font-size: 14px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .builder-tab-list {
+      display: flex;
+      gap: 8px;
+      padding: 14px 16px 0;
+    }
+
+    .builder-tab-trigger {
+      min-height: 38px;
+      padding: 0 14px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 999px;
+      background: rgba(248, 250, 252, 0.86);
+      color: #57534e;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .builder-tab-trigger:hover {
+      transform: translateY(-1px);
+    }
+
+    .builder-tab-trigger.is-active {
+      background: #111827;
+      border-color: #111827;
+      color: #ffffff;
+    }
+
+    .builder-panel__toolbar {
+      display: grid;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .builder-search {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 44px;
+      padding: 0 14px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 14px;
+      background: #ffffff;
+    }
+
+    .builder-search:focus-within {
+      border-color: rgba(79, 70, 229, 0.32);
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.08);
+    }
+
+    .builder-search__icon {
+      width: 16px;
+      height: 16px;
+      color: #94a3b8;
+      flex-shrink: 0;
+    }
+
+    .builder-search input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: #111827;
+      font: inherit;
+    }
+
+    .builder-search input::placeholder {
+      color: #94a3b8;
+    }
+
+    .builder-chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .builder-chip {
+      min-height: 32px;
+      padding: 0 12px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.84);
+      color: #57534e;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition:
+        border-color 0.2s ease,
+        background-color 0.2s ease,
+        color 0.2s ease;
+    }
+
+    .builder-chip.is-active {
+      background: rgba(79, 70, 229, 0.12);
+      border-color: rgba(79, 70, 229, 0.18);
+      color: #4338ca;
+    }
+
+    .builder-tab-panels {
+      min-height: 0;
+      display: grid;
+    }
+
+    .builder-tab-panel {
+      min-height: 0;
+      display: none;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .builder-tab-panels--sidebar .builder-tab-panel {
+      padding-top: 14px;
+    }
+
+    .builder-tab-panel.is-active {
+      display: grid;
+    }
+
+    .builder-panel__content--library {
+      padding: 0;
+    }
+
+    .builder-help-card {
+      padding: 16px;
+      color: #57534e;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .builder-help-card strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #111827;
+      font-size: 14px;
+    }
+
+    .builder-help-card p {
+      margin: 0;
+    }
+
+    .builder-canvas {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 14px;
+      padding: 0;
+      min-width: 0;
+    }
+
+    .builder-canvas__controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.78);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+    }
+
+    .builder-preview-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .builder-preview-button,
+    .builder-preview-stepper {
+      min-height: 36px;
+      padding: 0 12px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 999px;
+      background: #ffffff;
+      color: #475569;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .builder-preview-button.is-active {
+      background: #111827;
+      border-color: #111827;
+      color: #ffffff;
+    }
+
+    .builder-preview-stepper[disabled] {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .builder-preview-metric {
+      color: #57534e;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .builder-preview-metric--strong {
+      color: #111827;
+      min-width: 54px;
+      text-align: center;
+    }
+
+    .builder-canvas__frame {
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(248, 250, 252, 0.92));
+      box-shadow: 0 24px 56px rgba(15, 23, 42, 0.07);
+    }
+
+    .builder-canvas__stage {
+      height: 100%;
+      min-height: 0;
+      padding: 18px;
+      box-sizing: border-box;
+      background-image: radial-gradient(rgba(148, 163, 184, 0.22) 1px, transparent 1px);
+      background-size: 18px 18px;
+    }
+
+    #gjs {
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 26px 62px rgba(15, 23, 42, 0.1);
+    }
+
+    .gjs-cv-canvas__frames {
+      padding: 12px 0;
+      box-sizing: border-box;
+    }
+
+    .gjs-frame-wrapper {
+      width: 100% !important;
+      max-width: var(--builder-preview-width, 800px) !important;
+      margin: 0 auto !important;
+      padding: 12px 0 22px !important;
+      box-sizing: border-box;
+    }
+
+    .gjs-frame {
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 22px;
+      box-shadow: 0 30px 70px rgba(15, 23, 42, 0.12);
+      background: #ffffff;
+    }
+
+    .gjs-cv-canvas .gjs-highlighter,
+    .gjs-cv-canvas .gjs-highlighter-sel {
+      outline-color: #4f46e5;
+      border-radius: 12px;
+    }
+
+    .gjs-cv-canvas .gjs-highlighter-sel {
+      outline-width: 2px;
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.14);
+    }
+
+    .gjs-toolbar {
+      background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%);
+      border-radius: 999px;
+      padding: 4px;
+      box-shadow: 0 16px 36px rgba(79, 70, 229, 0.28);
+    }
+
+    .gjs-toolbar-item {
+      width: 30px;
+      padding: 7px;
+      border-radius: 999px;
+    }
+
+    .gjs-toolbar-item:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .gjs-block-category {
+      border-bottom: 0;
+      padding: 0 0 14px;
+    }
+
+    .gjs-title,
+    .gjs-sm-sector-title,
+    .gjs-layer-title,
+    .gjs-trt-trait__label {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+
+    .gjs-block {
+      margin: 0 0 12px;
+      padding: 14px;
+      border-radius: 18px;
+    }
+
+    #blocks .gjs-blocks-c {
+      display: grid;
+      gap: 12px;
+      padding: 0 16px 16px;
+    }
+
+    #blocks .gjs-block-categories {
+      display: grid;
+      gap: 8px;
+      padding-top: 2px;
+    }
+
+    .styles-container,
+    .traits-container,
+    .advanced-container,
+    .layers-container {
+      min-height: 0;
+    }
+
+    .builder-modal__content {
+      border: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    @media (max-width: 1180px) {
+      .builder-workspace {
+        grid-template-columns: 290px minmax(0, 1fr) 330px;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .builder-topbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .builder-topbar__actions {
+        justify-content: flex-start;
+      }
+
+      .builder-workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .builder-sidebar--left,
+      .builder-sidebar--right {
+        border: 0;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .builder-shell {
+        padding: 12px;
+      }
+
+      .builder-topbar,
+      .builder-panel,
+      .builder-canvas__frame {
+        border-radius: 20px;
+      }
+
+      .builder-canvas__controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .builder-preview-group {
+        justify-content: flex-start;
+      }
+
+      .builder-button,
+      .builder-preview-button {
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="builder-shell">
+    <div class="builder-topbar">
+      <div class="builder-brand">
+        <div class="builder-brand__mark">ES</div>
+        <div class="builder-brand__copy">
+          <strong>Email Template Builder</strong>
+          <span>Production-ready email campaigns with local autosave and clean HTML export</span>
+        </div>
+      </div>
+      <div class="builder-topbar__actions">
+        <span id="save-status" class="builder-status" data-state="saved">Autosave ready</span>
+        <button id="btn-store" class="builder-button">Templates</button>
+        <button id="btn-undo" class="builder-button">Undo</button>
+        <button id="btn-redo" class="builder-button">Redo</button>
+        <button id="btn-preview" class="builder-button">Preview</button>
+        <button id="btn-clear" class="builder-button">Clear</button>
+        <button id="btn-code" class="builder-button">Export HTML</button>
+        <button id="btn-save" class="builder-button builder-button--primary">Save Draft</button>
+      </div>
+    </div>
+
+    <div class="builder-workspace">
+      <aside class="builder-sidebar builder-sidebar--left">
+        <section class="builder-panel builder-panel--library">
+          <div class="builder-panel__header">
+            <strong>Library</strong>
+            <span>Search, filter, and drag email-safe blocks into the canvas.</span>
+          </div>
+          <div class="builder-tab-list builder-tab-list--sidebar" role="tablist" aria-label="Library panels">
+            <button class="builder-tab-trigger is-active" type="button" role="tab" aria-selected="true"
+              data-sidebar-tab="blocks">Blocks</button>
+            <button class="builder-tab-trigger" type="button" role="tab" aria-selected="false"
+              data-sidebar-tab="layers">Layers</button>
+          </div>
+          <div class="builder-panel__toolbar" data-sidebar-toolbar="blocks">
+            <label class="builder-search">
+              <span class="builder-search__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="7"></circle>
+                  <path d="m20 20-3.5-3.5"></path>
+                </svg>
+              </span>
+              <input id="block-search" type="search" placeholder="Search blocks..." autocomplete="off" />
+            </label>
+            <div id="block-filter-chips" class="builder-chip-list"></div>
+          </div>
+          <div class="builder-tab-panels builder-tab-panels--sidebar">
+            <div class="builder-tab-panel is-active" data-sidebar-panel="blocks">
+              <div class="builder-panel__content builder-panel__content--library" id="blocks"></div>
+            </div>
+            <div class="builder-tab-panel" data-sidebar-panel="layers">
+              <div class="builder-note">Use layers when you need to select the outer section instead of its inner copy or buttons.</div>
+              <div class="builder-panel__content layers-container"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="builder-panel builder-panel--help">
+          <div class="builder-panel__header">
+            <strong>Need help?</strong>
+            <span>Build the structure on the left, edit content on the right, and export only when the email is ready to send.</span>
+          </div>
+          <div class="builder-help-card">
+            <strong>Email-safe workflow</strong>
+            <p>Prefer sections, buttons, dividers, lists, merge tags, and product cards that were designed for export-ready email HTML.</p>
+          </div>
+        </section>
+      </aside>
+
+      <main class="builder-canvas">
+        <div class="builder-canvas__controls">
+          <div class="builder-preview-group" role="group" aria-label="Canvas device preview">
+            <button class="builder-preview-button is-active" type="button" data-device-id="desktop">Desktop</button>
+            <button class="builder-preview-button" type="button" data-device-id="tablet">Tablet</button>
+            <button class="builder-preview-button" type="button" data-device-id="mobilePortrait">Mobile</button>
+          </div>
+          <div class="builder-preview-group builder-preview-group--compact" role="group" aria-label="Canvas width controls">
+            <span id="canvas-mode-label" class="builder-preview-metric">Desktop preview</span>
+            <button id="btn-width-decrease" class="builder-preview-stepper" type="button" aria-label="Decrease preview width">-</button>
+            <span id="preview-width-label" class="builder-preview-metric builder-preview-metric--strong">800px</span>
+            <button id="btn-width-increase" class="builder-preview-stepper" type="button" aria-label="Increase preview width">+</button>
+          </div>
+        </div>
+        <div class="builder-canvas__frame">
+          <div class="builder-canvas__stage">
+            <div id="gjs"></div>
+          </div>
+        </div>
+      </main>
+
+      <aside class="builder-sidebar builder-sidebar--right">
+        <section class="builder-panel builder-panel--inspector">
+          <div class="builder-panel__header">
+            <strong>Inspector</strong>
+            <span>Switch between content, styles, and advanced controls for the selected email block.</span>
+          </div>
+          <div class="builder-tab-list" role="tablist" aria-label="Inspector panels">
+            <button class="builder-tab-trigger is-active" type="button" role="tab" aria-selected="true"
+              data-inspector-tab="content">Content</button>
+            <button class="builder-tab-trigger" type="button" role="tab" aria-selected="false"
+              data-inspector-tab="style">Style</button>
+            <button class="builder-tab-trigger" type="button" role="tab" aria-selected="false"
+              data-inspector-tab="advanced">Advanced</button>
+          </div>
+          <div class="builder-tab-panels">
+            <div class="builder-tab-panel is-active" data-inspector-panel="content">
+              <div class="builder-note">Edit text, links, images, and section-level fields here. If it looks empty, reselect the outer section from the canvas or Layers.</div>
+              <div class="builder-panel__content traits-container"></div>
+            </div>
+            <div class="builder-tab-panel" data-inspector-panel="style">
+              <div class="builder-note">Use the email-safe style stack for spacing, typography, colors, and borders without introducing risky web-only patterns.</div>
+              <div class="builder-panel__content builder-panel__content--fill styles-container"></div>
+            </div>
+            <div class="builder-tab-panel" data-inspector-panel="advanced">
+              <div class="builder-note">Advanced controls are best for lower-frequency adjustments like selectors and structure-level tweaks.</div>
+              <div class="builder-panel__content builder-panel__content--fill advanced-container"></div>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <div id="template-modal" class="builder-modal">
+    <div class="builder-modal__content">
+      <div class="builder-modal__header">
+        <div>
+          <h2>Templates</h2>
+          <p>Load a starter email layout or begin from a clean canvas.</p>
+        </div>
+        <button id="btn-close-modal" class="builder-modal__close">&times;</button>
+      </div>
+      <div id="template-grid" class="template-grid"></div>
+    </div>
+  </div>
+
+  <div id="export-modal" class="builder-modal">
+    <div class="builder-modal__content builder-modal__content--wide">
+      <div class="builder-modal__header">
+        <div>
+          <h2>Production HTML</h2>
+          <p>Copy or download the compiled email for SendGrid, Mailchimp, Klaviyo, AWS SES, or your own sender.</p>
+        </div>
+        <button id="btn-close-export" class="builder-modal__close">&times;</button>
+      </div>
+      <textarea id="export-code" class="export-code" spellcheck="false" readonly></textarea>
+      <div class="builder-modal__footer">
+        <div class="builder-modal__hint">Inline styles are applied where possible, and responsive email rules stay in the document head.</div>
+        <div class="builder-topbar__actions">
+          <button id="btn-copy-html" class="builder-button">Copy HTML</button>
+          <button id="btn-download-html" class="builder-button builder-button--primary">Download HTML</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="builder-toast" class="builder-toast" aria-live="polite"></div>
+
+  <script src="minimal-builder-plugin.js"></script>
+  <script type="text/javascript">
+    const minimalBuilder = window.grapesjsMinimalBuilder;
+    const STORAGE_KEY = 'grapesjs-email-builder-project';
+    const DEFAULT_TEMPLATE_KEY = 'minimal';
+    const templateModal = document.getElementById('template-modal');
+    const exportModal = document.getElementById('export-modal');
+    const templateGrid = document.getElementById('template-grid');
+    const exportCode = document.getElementById('export-code');
+    const saveStatus = document.getElementById('save-status');
+    const toast = document.getElementById('builder-toast');
+    const blockSearch = document.getElementById('block-search');
+    const blockFilterChips = document.getElementById('block-filter-chips');
+    const canvasModeLabel = document.getElementById('canvas-mode-label');
+    const previewWidthLabel = document.getElementById('preview-width-label');
+    const previewToggleButton = document.getElementById('btn-preview');
+    const widthDecreaseButton = document.getElementById('btn-width-decrease');
+    const widthIncreaseButton = document.getElementById('btn-width-increase');
+    const deviceButtons = Array.from(document.querySelectorAll('[data-device-id]'));
+
+    let toastTimer = 0;
+    let lastExportHtml = '';
+    let activeBlockCategory = 'all';
+    let desktopPreviewWidth = 800;
+    let currentDeviceId = 'desktop';
+
+    const setStatus = (message, state = 'saved') => {
+      saveStatus.textContent = message;
+      saveStatus.dataset.state = state;
+    };
+
+    const showToast = (message) => {
+      toast.textContent = message;
+      toast.classList.add('is-visible');
+      window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => toast.classList.remove('is-visible'), 2600);
+    };
+
+    const openModal = (modal) => modal.classList.add('open');
+    const closeModal = (modal) => modal.classList.remove('open');
+    const cloneData = (value) => JSON.parse(JSON.stringify(value || []));
+    const normalizeLabel = (value = '') => `${value}`.trim().toLowerCase();
+
+    const setCanvasModeLabel = (deviceId) => {
+      if (!canvasModeLabel) return;
+      const labels = {
+        desktop: 'Desktop preview',
+        tablet: 'Tablet preview',
+        mobilePortrait: 'Mobile preview',
+      };
+      canvasModeLabel.textContent = labels[deviceId] || 'Desktop preview';
+    };
+
+    const editor = grapesjs.init({
+      container: '#gjs',
+      height: '100%',
+      width: 'auto',
+      storageManager: {
+        type: 'local',
+        autosave: true,
+        autoload: true,
+        stepsBeforeSave: 1,
+        options: {
+          local: {
+            key: STORAGE_KEY,
+            checkLocal: true,
+          },
+        },
+      },
+      avoidInlineStyle: false,
+      jsInHtml: false,
+      panels: {
+        defaults: [],
+      },
+      deviceManager: {
+        devices: [
+          { id: 'desktop', name: 'Desktop', width: '' },
+          { id: 'tablet', name: 'Tablet', width: '768px', widthMedia: '992px' },
+          { id: 'mobilePortrait', name: 'Mobile', width: '320px', widthMedia: '480px' },
+        ]
+      },
+      assetManager: {
+        assets: [
+          'https://picsum.photos/id/1060/900/700',
+          'https://picsum.photos/id/1080/900/700',
+          'https://picsum.photos/id/1050/900/700',
+          'https://picsum.photos/id/1039/900/700',
+        ],
+      },
+      blockManager: {
+        appendTo: '#blocks',
+      },
+      layerManager: {
+        appendTo: '.layers-container',
+      },
+      selectorManager: {
+        appendTo: '.styles-container',
+        componentFirst: true,
+      },
+      styleManager: {
+        appendTo: '.styles-container',
+        sectors: minimalBuilder.styleManagerSectors(),
+      },
+      traitManager: {
+        appendTo: '.traits-container',
+      },
+      baseCss: minimalBuilder.canvasCss,
+      plugins: [minimalBuilder],
+      components: [],
+    });
+
+    const hasCanvasContent = () => {
+      const wrapper = editor.getWrapper();
+      return !!wrapper && wrapper.components().length > 0;
+    };
+
+    const setInspectorTab = (tabName) => {
+      document.querySelectorAll('[data-inspector-tab]').forEach((trigger) => {
+        const isActive = trigger.dataset.inspectorTab === tabName;
+        trigger.classList.toggle('is-active', isActive);
+        trigger.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+
+      document.querySelectorAll('[data-inspector-panel]').forEach((panel) => {
+        panel.classList.toggle('is-active', panel.dataset.inspectorPanel === tabName);
+      });
+    };
+
+    const applyBlockFilters = () => {
+      if (!blockSearch) return;
+      const query = normalizeLabel(blockSearch.value);
+      const categoryEls = Array.from(document.querySelectorAll('#blocks .gjs-block-category'));
+
+      categoryEls.forEach((categoryEl) => {
+        const titleEl = categoryEl.querySelector('.gjs-title');
+        const categoryName = normalizeLabel(titleEl ? titleEl.textContent : '');
+        let visibleBlocks = 0;
+
+        categoryEl.querySelectorAll('.gjs-block').forEach((blockEl) => {
+          const blockText = normalizeLabel(blockEl.textContent || '');
+          const matchesQuery = !query || blockText.includes(query);
+          const matchesCategory = activeBlockCategory === 'all' || categoryName === activeBlockCategory;
+          const isVisible = matchesQuery && matchesCategory;
+          blockEl.style.display = isVisible ? '' : 'none';
+          visibleBlocks += isVisible ? 1 : 0;
+        });
+
+        categoryEl.style.display = visibleBlocks ? '' : 'none';
+      });
+
+      const noCategoryBlocks = Array.from(document.querySelectorAll('#blocks .gjs-blocks-no-cat .gjs-block'));
+      noCategoryBlocks.forEach((blockEl) => {
+        const blockText = normalizeLabel(blockEl.textContent || '');
+        const matchesQuery = !query || blockText.includes(query);
+        const matchesCategory = activeBlockCategory === 'all';
+        blockEl.style.display = matchesQuery && matchesCategory ? '' : 'none';
+      });
+    };
+
+    const renderBlockCategoryChips = () => {
+      if (!blockFilterChips) return;
+      const categoryLabels = Array.from(
+        new Set(
+          editor.BlockManager.getAll().models.map((block) => block.getCategoryLabel()).filter(Boolean),
+        ),
+      );
+
+      const items = ['All', ...categoryLabels];
+      blockFilterChips.innerHTML = '';
+
+      items.forEach((label) => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = `builder-chip${normalizeLabel(label) === activeBlockCategory ? ' is-active' : ''}`;
+        chip.textContent = label;
+        chip.dataset.category = normalizeLabel(label);
+        chip.addEventListener('click', () => {
+          activeBlockCategory = chip.dataset.category || 'all';
+          blockFilterChips.querySelectorAll('.builder-chip').forEach((item) => {
+            item.classList.toggle('is-active', item === chip);
+          });
+          applyBlockFilters();
+        });
+        blockFilterChips.appendChild(chip);
+      });
+    };
+
+    const inlineEditorStyles = (html, css) => {
+      const doc = document.implementation.createHTMLDocument('email-export');
+      doc.body.innerHTML = html;
+
+      const styleEl = doc.createElement('style');
+      styleEl.textContent = css;
+      doc.head.appendChild(styleEl);
+
+      const retainedCss = [];
+      const appendStyle = (element, cssText) => {
+        if (!cssText || element === styleEl) return;
+        const existing = (element.getAttribute('style') || '').trim();
+        const normalizedExisting = existing ? `${existing.replace(/;+\s*$/, '')}; ` : '';
+        element.setAttribute('style', `${normalizedExisting}${cssText}`.replace(/\s+/g, ' ').trim());
+      };
+
+      const rules = styleEl.sheet ? Array.from(styleEl.sheet.cssRules || []) : [];
+      rules.forEach((rule) => {
+        if (rule.type === CSSRule.STYLE_RULE) {
+          try {
+            const elements = doc.querySelectorAll(rule.selectorText);
+            if (!elements.length) return;
+            elements.forEach((element) => appendStyle(element, rule.style.cssText));
+          } catch (error) {
+            retainedCss.push(rule.cssText);
+          }
+          return;
+        }
+
+        retainedCss.push(rule.cssText);
+      });
+
+      styleEl.remove();
+
+      return {
+        html: doc.body.innerHTML.trim(),
+        bodyStyle: doc.body.getAttribute('style') || '',
+        retainedCss: retainedCss.join('\n'),
+      };
+    };
+
+    const buildProductionHtml = () => {
+      const rawHtml = editor.getHtml({ cleanId: true });
+      const rawCss = [minimalBuilder.canvasCss, editor.getCss({ keepUnusedStyles: false })].filter(Boolean).join('\n');
+      const { html, bodyStyle, retainedCss } = inlineEditorStyles(rawHtml, rawCss);
+      const headCss = [
+        'a[x-apple-data-detectors], u + #body a, #MessageViewBody a { color: inherit !important; text-decoration: none !important; }',
+        retainedCss,
+      ]
+        .filter(Boolean)
+        .join('\n');
+      const finalBodyStyle = ['margin:0;', 'padding:0;', 'background:#f1efeb;', bodyStyle].filter(Boolean).join(' ');
+
+      return `<!doctype html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <title>Email Template</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings xmlns:o="urn:schemas-microsoft-com:office:office">
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  ${headCss ? `<style>${headCss}</style>` : ''}
+</head>
+<body id="body" style="${finalBodyStyle}">
+  <center role="article" aria-roledescription="email" lang="en" style="width:100%; background:#f1efeb;">
+${html}
+  </center>
+</body>
+</html>`;
+    };
+
+    const updateExportCode = () => {
+      lastExportHtml = buildProductionHtml();
+      exportCode.value = lastExportHtml;
+      return lastExportHtml;
+    };
+
+    const downloadHtml = (html) => {
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'email-template.html';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    };
+
+    const copyHtml = async (html) => {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(html);
+        return;
+      }
+
+      exportCode.focus();
+      exportCode.select();
+      document.execCommand('copy');
+    };
+
+    const applyTemplate = async (templateKey) => {
+      const template = minimalBuilder.emailTemplates[templateKey];
+      editor.Css.clear();
+      editor.setComponents(template ? cloneData(template.components) : []);
+      closeModal(templateModal);
+      await editor.store();
+      setStatus('Saved locally', 'saved');
+      showToast(template ? `${template.name} loaded.` : 'Blank canvas ready.');
+    };
+
+    const renderTemplateGrid = () => {
+      templateGrid.innerHTML = '';
+
+      Object.entries(minimalBuilder.emailTemplates).forEach(([key, tpl]) => {
+        const card = document.createElement('div');
+        card.className = 'template-card';
+        card.innerHTML = `<h3>${tpl.name}</h3><p>${tpl.description}</p>`;
+        card.addEventListener('click', () => {
+          applyTemplate(key).catch(() => {
+            setStatus('Save failed', 'error');
+            showToast('Could not load that template.');
+          });
+        });
+        templateGrid.appendChild(card);
+      });
+
+      const blankCard = document.createElement('div');
+      blankCard.className = 'template-card';
+      blankCard.innerHTML = '<h3>Blank Canvas</h3><p>Start from scratch with only the email-safe block library.</p>';
+      blankCard.addEventListener('click', () => {
+        applyTemplate('').catch(() => {
+          setStatus('Save failed', 'error');
+          showToast('Could not reset the canvas.');
+        });
+      });
+      templateGrid.appendChild(blankCard);
+    };
+
+    editor.on('storage:start:store', () => setStatus('Saving locally...', 'saving'));
+    editor.on('storage:end:store', () => setStatus('Saved locally', 'saved'));
+    editor.on('storage:error:store', () => {
+      setStatus('Save failed', 'error');
+      showToast('Could not save the draft in this browser.');
+    });
+
+    editor.on('load', async () => {
+      renderTemplateGrid();
+
+      if (!hasCanvasContent() && minimalBuilder.emailTemplates[DEFAULT_TEMPLATE_KEY]) {
+        editor.setComponents(cloneData(minimalBuilder.emailTemplates[DEFAULT_TEMPLATE_KEY].components));
+        await editor.store();
+      }
+
+      document.getElementById('btn-store').addEventListener('click', () => openModal(templateModal));
+      document.getElementById('btn-close-modal').addEventListener('click', () => closeModal(templateModal));
+      document.getElementById('btn-close-export').addEventListener('click', () => closeModal(exportModal));
+
+      document.querySelectorAll('[data-inspector-tab]').forEach((trigger) => {
+        trigger.addEventListener('click', () => setInspectorTab(trigger.dataset.inspectorTab || 'content'));
+      });
+
+      [templateModal, exportModal].forEach((modal) => {
+        modal.addEventListener('click', (event) => {
+          if (event.target === modal) {
+            closeModal(modal);
+          }
+        });
+      });
+
+      document.getElementById('device-switcher').addEventListener('change', (event) => {
+        editor.setDevice(event.target.value);
+        setCanvasModeLabel(event.target.value);
+      });
+      document.getElementById('btn-undo').addEventListener('click', () => editor.runCommand('core:undo'));
+      document.getElementById('btn-redo').addEventListener('click', () => editor.runCommand('core:redo'));
+      document.getElementById('btn-fullscreen').addEventListener('click', () => editor.runCommand('core:fullscreen'));
+
+      document.getElementById('btn-clear').addEventListener('click', async () => {
+        if (!window.confirm('Clear the current email canvas? This keeps your templates but removes the current layout.')) {
+          return;
+        }
+
+        editor.runCommand('core:canvas-clear');
+        editor.Css.clear();
+        await editor.store();
+        showToast('Canvas cleared.');
+      });
+
+      document.getElementById('btn-code').addEventListener('click', () => {
+        try {
+          updateExportCode();
+          openModal(exportModal);
+        } catch (error) {
+          setStatus('Export failed', 'error');
+          showToast('Could not build the production HTML.');
+        }
+      });
+
+      document.getElementById('btn-copy-html').addEventListener('click', async () => {
+        try {
+          const html = lastExportHtml || updateExportCode();
+          await copyHtml(html);
+          showToast('Production HTML copied.');
+        } catch (error) {
+          showToast('Copy failed. You can still select the HTML manually.');
+        }
+      });
+
+      document.getElementById('btn-download-html').addEventListener('click', () => {
+        try {
+          const html = lastExportHtml || updateExportCode();
+          downloadHtml(html);
+          showToast('HTML file downloaded.');
+        } catch (error) {
+          showToast('Download failed.');
+        }
+      });
+
+      document.getElementById('btn-save').addEventListener('click', async () => {
+        try {
+          await editor.store();
+          showToast('Draft saved locally.');
+        } catch (error) {
+          setStatus('Save failed', 'error');
+          showToast('Could not save the draft.');
+        }
+      });
+
+      if (blockSearch) {
+        blockSearch.addEventListener('input', applyBlockFilters);
+      }
+      renderBlockCategoryChips();
+      applyBlockFilters();
+      setInspectorTab('content');
+      setCanvasModeLabel(document.getElementById('device-switcher').value);
+      setStatus('Autosave ready', 'saved');
+      showToast('Builder ready. Drafts now save in this browser.');
+    });
+  </script>
+</body>
+
+</html>
+
