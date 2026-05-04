@@ -36,6 +36,7 @@
     "codemirror": "5.63.0",
     "codemirror-formatting": "1.0.0",
     "html-entities": "~1.4.0",
+    "nodemailer": "^7.0.13",
     "promise-polyfill": "8.3.0",
     "underscore": "1.13.8"
   },
@@ -75,6 +76,7 @@
     "ts:build": "node node_modules/grapesjs-cli/dist/cli.js build --dts='only' --patch=false",
     "ts:check": "tsc --noEmit --esModuleInterop dist/index.d.ts",
     "start": "cross-env NODE_ENV=development run-p start:*",
+    "start:email-api": "node email-builder/server.js",
     "start:js": "node node_modules/grapesjs-cli/dist/cli.js serve",
     "start:css": "npm run build:css -- --watch",
     "test": "jest --forceExit",

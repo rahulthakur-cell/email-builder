@@ -27,6 +27,17 @@ module.exports = ({ config, pkg, webpack }) => {
       static: [rootDir],
       headers: { 'Access-Control-Allow-Origin': '*' },
       allowedHosts: 'all',
+      proxy: {
+        ...(config.devServer && config.devServer.proxy),
+        '/send-test-email': {
+          target: 'http://127.0.0.1:8787',
+          changeOrigin: true,
+        },
+        '/email-api/health': {
+          target: 'http://127.0.0.1:8787',
+          changeOrigin: true,
+        },
+      },
     },
     experiments: {
       outputModule: !!BUILD_MODULE,

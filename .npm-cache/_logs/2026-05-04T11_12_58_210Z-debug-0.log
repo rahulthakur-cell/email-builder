@@ -1,0 +1,89 @@
+0 verbose cli C:\nvm4w\nodejs\node.exe C:\nvm4w\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@10.9.7
+2 info using node@v22.22.2
+3 silly config load:file:C:\Users\RAHUL\AppData\Local\nvm\v22.22.2\node_modules\npm\npmrc
+4 silly config load:file:D:\grapesjs\grapesjs\.npmrc
+5 silly config load:file:C:\Users\RAHUL\.npmrc
+6 silly config load:file:C:\nvm4w\nodejs\etc\npmrc
+7 verbose title npm pack nodemailer@7.0.13
+8 verbose argv "pack" "nodemailer@7.0.13" "--cache" "D:\\grapesjs\\grapesjs\\.npm-cache" "--pack-destination" "packages/core/node_modules"
+9 verbose logfile logs-max:10 dir:D:\grapesjs\grapesjs\.npm-cache\_logs\2026-05-04T11_12_58_210Z-
+10 verbose logfile D:\grapesjs\grapesjs\.npm-cache\_logs\2026-05-04T11_12_58_210Z-debug-0.log
+11 silly logfile done cleaning log files
+12 http fetch GET 200 https://registry.npmjs.org/npm 182ms
+13 http fetch GET 200 https://registry.npmjs.org/nodemailer 193ms (cache miss)
+14 http cache https://registry.npmjs.org/nodemailer 45ms (cache hit)
+15 http cache https://registry.npmjs.org/nodemailer/-/nodemailer-7.0.13.tgz 0ms (cache hit)
+16 silly tarball no local data for https://registry.npmjs.org/nodemailer/-/nodemailer-7.0.13.tgz. Extracting by manifest.
+17 http fetch GET 200 https://registry.npmjs.org/nodemailer/-/nodemailer-7.0.13.tgz 52ms (cache miss)
+18 notice
+19 notice package: nodemailer@7.0.13
+20 notice Tarball Contents
+21 notice 95B .gitattributes
+21 notice 136B .ncurc.js
+21 notice 85B .prettierignore
+21 notice 249B .prettierrc
+21 notice 171B .prettierrc.js
+21 notice 219B .release-please-config.json
+21 notice 36.5kB CHANGELOG.md
+21 notice 3.4kB CODE_OF_CONDUCT.md
+21 notice 935B LICENSE
+21 notice 5.2kB README.md
+21 notice 1.0kB SECURITY.txt
+21 notice 3.0kB eslint.config.js
+21 notice 12.2kB lib/addressparser/index.js
+21 notice 3.7kB lib/base64/index.js
+21 notice 7.3kB lib/dkim/index.js
+21 notice 4.8kB lib/dkim/message-parser.js
+21 notice 5.7kB lib/dkim/relaxed-body.js
+21 notice 3.7kB lib/dkim/sign.js
+21 notice 8.1kB lib/fetch/cookies.js
+21 notice 8.2kB lib/fetch/index.js
+21 notice 2.4kB lib/json-transport/index.js
+21 notice 22.3kB lib/mail-composer/index.js
+21 notice 15.0kB lib/mailer/index.js
+21 notice 11.6kB lib/mailer/mail-message.js
+21 notice 23.4kB lib/mime-funcs/index.js
+21 notice 90.1kB lib/mime-funcs/mime-types.js
+21 notice 44.8kB lib/mime-node/index.js
+21 notice 670B lib/mime-node/last-newline.js
+21 notice 961B lib/mime-node/le-unix.js
+21 notice 1.3kB lib/mime-node/le-windows.js
+21 notice 4.9kB lib/nodemailer.js
+21 notice 15.3kB lib/punycode/index.js
+21 notice 6.6kB lib/qp/index.js
+21 notice 6.6kB lib/sendmail-transport/index.js
+21 notice 7.7kB lib/ses-transport/index.js
+21 notice 22.5kB lib/shared/index.js
+21 notice 3.0kB lib/smtp-connection/data-stream.js
+21 notice 4.3kB lib/smtp-connection/http-proxy-client.js
+21 notice 64.8kB lib/smtp-connection/index.js
+21 notice 19.9kB lib/smtp-pool/index.js
+21 notice 8.6kB lib/smtp-pool/pool-resource.js
+21 notice 13.7kB lib/smtp-transport/index.js
+21 notice 4.1kB lib/stream-transport/index.js
+21 notice 1.2kB lib/well-known/index.js
+21 notice 14.9kB lib/well-known/services.json
+21 notice 15.6kB lib/xoauth2/index.js
+21 notice 1.5kB package.json
+22 notice Tarball Details
+23 notice name: nodemailer
+24 notice version: 7.0.13
+25 notice filename: nodemailer-7.0.13.tgz
+26 notice package size: 121.2 kB
+27 notice unpacked size: 532.3 kB
+28 notice shasum: 74acaa55f0c6f9476384c29f27f53e467e8483cd
+29 notice integrity: sha512-PNDFSJdP+KFgd[...]Iae4serI7dinw==
+30 notice total files: 47
+31 notice
+32 verbose cwd D:\grapesjs\grapesjs
+33 verbose os Windows_NT 10.0.26200
+34 verbose node v22.22.2
+35 verbose npm  v10.9.7
+36 notice
+36 notice New major version of npm available! 10.9.7 -> 11.13.0
+36 notice Changelog: https://github.com/npm/cli/releases/tag/v11.13.0
+36 notice To update run: npm install -g npm@11.13.0
+36 notice  { force: true, [Symbol(proc-log.meta)]: true }
+37 verbose exit 0
+38 info ok
