@@ -638,9 +638,13 @@ const findNonPublicAssetUrls = (html) => {
 const sendTestEmailRequest = async (email) => {
   const html = buildProductionHtml();
   state.lastExportHtml = html;
+
+  // Client-side asset check (fast path — avoids a round-trip)
   const assetIssues = findNonPublicAssetUrls(html);
   if (assetIssues.length) {
-    throw new Error(`Public image URLs are required before sending. Update these assets first: ${assetIssues.slice(0, 2).join(', ')}`);
+    throw new Error(
+      `Public image URLs are required before sending. Update these assets first: ${assetIssues.slice(0, 2).join(', ')}`
+    );
   }
 
   let response;
@@ -650,19 +654,31 @@ const sendTestEmailRequest = async (email) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, html }),
     });
-  } catch (error) {
-    throw new Error('Could not reach the test email service. Make sure the email API is running.');
+  } catch (_networkError) {
+    // fetch() itself threw — network unreachable or CORS preflight failed
+    throw new Error('Could not reach the test email service.');
   }
 
-  const result = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const assetSummary = Array.isArray(result.assetIssues) && result.assetIssues.length
-      ? ` ${result.assetIssues.slice(0, 2).join(', ')}`
-      : '';
-    throw new Error(`${result.error || 'Could not send the test email.'}${assetSummary}`);
+  let result = {};
+  try { result = await response.json(); } catch (_) { /* non-JSON body — use defaults */ }
+
+  if (response.ok) return result;
+
+  // HTTP 500 with details array → SMTP misconfiguration
+  if (response.status === 500 && Array.isArray(result.details) && result.details.length) {
+    const detail = result.details.slice(0, 3).join(' ');
+    throw new Error(`SMTP is not configured. Check your .env file. ${detail}`);
   }
 
-  return result;
+  // HTTP 422 with assetIssues → server-side asset validation failure
+  if (response.status === 422 && Array.isArray(result.assetIssues) && result.assetIssues.length) {
+    throw new Error(
+      `${result.error || 'Asset issue.'} ${result.assetIssues.slice(0, 2).join(', ')}`
+    );
+  }
+
+  // All other non-2xx responses
+  throw new Error(result.error || 'Could not send the test email.');
 };
 
 const downloadHtml = (html) => {

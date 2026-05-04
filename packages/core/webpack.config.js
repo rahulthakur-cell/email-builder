@@ -27,16 +27,12 @@ module.exports = ({ config, pkg, webpack }) => {
       static: [rootDir],
       headers: { 'Access-Control-Allow-Origin': '*' },
       allowedHosts: 'all',
-      proxy: {
-        ...(config.devServer && config.devServer.proxy),
-        '/send-test-email': {
-          target: 'http://127.0.0.1:8787',
-          changeOrigin: true,
-        },
-        '/email-api/health': {
-          target: 'http://127.0.0.1:8787',
-          changeOrigin: true,
-        },
+      setupMiddlewares: (middlewares, devServer) => {
+        const { handleEmailRequest } = require('./email-builder/email-handler');
+        devServer.app.post('/send-test-email', (req, res) => handleEmailRequest(req, res));
+        devServer.app.get('/email-api/health', (req, res) => handleEmailRequest(req, res));
+        devServer.app.options('/send-test-email', (req, res) => handleEmailRequest(req, res));
+        return middlewares;
       },
     },
     experiments: {
