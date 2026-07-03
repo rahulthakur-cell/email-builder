@@ -22,3 +22,12 @@ grapesjs-*.tgz
 _index.html
 docs/.vuepress/dist
 dist/
+
+# Environment variables — never commit secrets
+.env
+.env.local
+
+# Local dev caches
+.npm-cache/
+.pnpm-store/
+.chrome-profile/
