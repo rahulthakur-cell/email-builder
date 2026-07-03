@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "installCommand": "pnpm install",
+  "buildCommand": "pnpm --filter grapesjs build",
+  "outputDirectory": "packages/core",
+  "framework": null,
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs20.x"
+    }
+  },
+  "routes": [
+    {
+      "src": "/send-test-email",
+      "dest": "/api/send-test-email"
+    },
+    {
+      "src": "/email-api/health",
+      "dest": "/api/health"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}
