@@ -15,12 +15,13 @@ if (!window.grapesjs || !minimalBuilder) {
 const STORAGE_VERSION = 'v6';
 const activeStorageKey = `${builderConfig.storageKey}-${STORAGE_VERSION}`;
 const TEST_EMAIL_RECIPIENT_KEY = `${activeStorageKey}:test-email-recipient`;
+const SAVED_TEMPLATES_KEY = 'grapesjs-email-builder-saved-templates';
 (() => {
   // Remove old keys that don't match the current version
   try {
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const k = localStorage.key(i);
-      if (k && k.startsWith('grapesjs-email-builder') && k !== activeStorageKey) {
+      if (k && k.startsWith('grapesjs-email-builder') && k !== activeStorageKey && k !== SAVED_TEMPLATES_KEY) {
         localStorage.removeItem(k);
       }
     }
@@ -103,6 +104,22 @@ const saveTestEmailRecipient = (value) => {
   try {
     localStorage.setItem(TEST_EMAIL_RECIPIENT_KEY, value);
   } catch (error) {}
+};
+const getSavedTemplates = () => {
+  try {
+    const raw = localStorage.getItem(SAVED_TEMPLATES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+};
+
+const setSavedTemplates = (templates) => {
+  try {
+    localStorage.setItem(SAVED_TEMPLATES_KEY, JSON.stringify(templates));
+  } catch (e) {
+    throw e;
+  }
 };
 const setTestEmailFeedback = (message = '', kind = 'neutral') => {
   shell.testEmailFeedback.textContent = message;
@@ -711,6 +728,60 @@ const ensureDefaultBaseLayout = async () => {
 
 const renderTemplateGrid = () => {
   shell.templateGrid.innerHTML = '';
+
+  // My Templates section (user-saved)
+  const savedTemplates = getSavedTemplates();
+  if (savedTemplates.length > 0) {
+    const savedHeading = document.createElement('div');
+    savedHeading.className = 'studio-template-section-heading';
+    savedHeading.textContent = 'My Templates';
+    shell.templateGrid.appendChild(savedHeading);
+
+    savedTemplates.forEach((template) => {
+      const card = document.createElement('div');
+      card.className = 'studio-template-card studio-template-card--saved';
+      const date = new Date(template.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      card.innerHTML = `
+        <div class="studio-template-card__body">
+          <strong>${template.name}</strong>
+          <p>Saved ${date}</p>
+        </div>
+        <button class="studio-template-card__delete" type="button" title="Delete template" data-template-id="${template.id}">&times;</button>
+      `;
+      // Load handler — click on card body (not delete button)
+      card.querySelector('.studio-template-card__body').addEventListener('click', () => {
+        try {
+          editor.loadProjectData(template.projectData);
+          applyBodySettings(template.bodySettings || builderConfig.defaultBodyStyles);
+          closeModal(shell.templateModal);
+          showToast(`${template.name} loaded.`);
+        } catch (e) {
+          showToast('Could not load that template.');
+        }
+      });
+      // Delete handler
+      card.querySelector('.studio-template-card__delete').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = e.currentTarget.dataset.templateId;
+        try {
+          const updated = getSavedTemplates().filter((t) => t.id !== id);
+          setSavedTemplates(updated);
+        } catch (e) {
+          showToast('Could not delete that template.');
+        }
+        renderTemplateGrid();
+      });
+      shell.templateGrid.appendChild(card);
+    });
+
+    // Divider heading for built-in templates
+    const builtinHeading = document.createElement('div');
+    builtinHeading.className = 'studio-template-section-heading';
+    builtinHeading.textContent = 'Built-in Templates';
+    shell.templateGrid.appendChild(builtinHeading);
+  }
+
+  // Built-in templates
   Object.entries(minimalBuilder.emailTemplates).forEach(([key, template]) => {
     const card = document.createElement('button'); card.type = 'button'; card.className = 'studio-template-card';
     card.innerHTML = `<strong>${template.name}</strong><p>${template.description}</p>`;
@@ -799,6 +870,51 @@ document.getElementById('btn-cancel-test-email').addEventListener('click', () =>
   }
   closeModal(m);
 }));
+
+// Save Template
+document.getElementById('btn-save-template').addEventListener('click', () => {
+  shell.saveTemplateInput.value = '';
+  shell.saveTemplateFeedback.textContent = '';
+  shell.saveTemplateFeedback.classList.remove('is-visible');
+  openModal(shell.saveTemplateModal);
+  window.requestAnimationFrame(() => shell.saveTemplateInput.focus());
+});
+
+document.getElementById('btn-close-save-template-modal').addEventListener('click', () => closeModal(shell.saveTemplateModal));
+document.getElementById('btn-cancel-save-template').addEventListener('click', () => closeModal(shell.saveTemplateModal));
+
+shell.saveTemplateModal.addEventListener('click', (e) => {
+  if (e.target === shell.saveTemplateModal) closeModal(shell.saveTemplateModal);
+});
+
+shell.saveTemplateForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const name = shell.saveTemplateInput.value.trim();
+  if (!name) {
+    shell.saveTemplateFeedback.textContent = 'Please enter a template name.';
+    shell.saveTemplateFeedback.classList.add('is-visible');
+    shell.saveTemplateFeedback.dataset.state = 'error';
+    return;
+  }
+  try {
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const entry = {
+      id,
+      name,
+      createdAt: new Date().toISOString(),
+      projectData: editor.getProjectData(),
+      html: buildProductionHtml(),
+      css: editor.getCss({ keepUnusedStyles: false }),
+      bodySettings: { ...state.bodySettings },
+    };
+    const existing = getSavedTemplates();
+    setSavedTemplates([...existing, entry]);
+    closeModal(shell.saveTemplateModal);
+    showToast('Template saved.');
+  } catch (e) {
+    showToast('Could not save template.');
+  }
+});
 
 document.getElementById('btn-export').addEventListener('click', () => {
   try { updateExportCode(); openModal(shell.exportModal); } catch (e) { setStatus('Export failed', 'error'); showToast('Could not build the production HTML.'); }

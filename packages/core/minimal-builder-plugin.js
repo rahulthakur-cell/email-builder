@@ -255,6 +255,19 @@
     vimeo: { bg: '#1ab7ea', color: '#ffffff', path: 'M22.39 7.26c-.11 2.39-1.77 5.75-4.99 10.08-3.31 4.5-6.22 6.74-8.73 6.74-1.42 0-2.61-1.38-3.55-4.14-.65-2.52-1.3-5.06-1.95-7.61-.83-3.1-1.75-4.66-2.76-4.66-.2 0-.82.38-1.87 1.14l-1.15-1.42c1.23-1.1 2.5-2.3 3.82-3.61 1.63-1.57 2.76-2.4 3.4-2.5 1.57-.2 2.52.88 2.85 3.25.32 2.52.54 4.14.65 4.86.5 3.53 1.15 5.28 1.95 5.28.6 0 1.46-.86 2.57-2.57 1.11-1.72 1.67-3.1 1.67-4.15 0-1.63-.6-2.45-1.8-2.45-.6 0-1.2.16-1.8.49 1.18-3.83 3.37-5.63 6.57-5.4 2.4.16 3.46 1.63 3.2 4.4z' },
   };
 
+  const socialIconPngMap = {
+    facebook:  'https://img.icons8.com/color/48/facebook-new.png',
+    instagram: 'https://img.icons8.com/color/48/instagram-new.png',
+    linkedin:  'https://img.icons8.com/color/48/linkedin.png',
+    youtube:   'https://img.icons8.com/color/48/youtube-play.png',
+    x:         'https://img.icons8.com/color/48/twitterx.png',
+    twitter:   'https://img.icons8.com/color/48/twitterx.png',
+    tiktok:    'https://img.icons8.com/color/48/tiktok.png',
+    pinterest: 'https://img.icons8.com/color/48/pinterest.png',
+    snapchat:  'https://img.icons8.com/color/48/snapchat.png',
+    vimeo:     'https://img.icons8.com/color/48/vimeo.png',
+  };
+
   const getSocialIconSvg = (name = '', opts = {}) => {
     const key = `${name}`.trim().toLowerCase();
     const match = socialIconMap[key] || { bg: '#475569', color: '#ffffff', path: 'M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z' };
@@ -290,6 +303,15 @@
         </svg>
       </div>
     `;
+  };
+
+  const getSocialIconImg = (name = '', opts = {}) => {
+    const key = `${name}`.trim().toLowerCase();
+    const src = socialIconPngMap[key] || 'https://img.icons8.com/color/48/share.png';
+    const altText = key ? key.charAt(0).toUpperCase() + key.slice(1) : 'Social';
+    const { size = 32, shape = 'circle' } = opts;
+    const borderRadius = shape === 'circle' ? '50%' : shape === 'rounded' ? '20%' : '0%';
+    return `<img src="${src}" width="${size}" height="${size}" alt="${altText}" style="display:block; border:0; border-radius:${borderRadius};" />`;
   };
 
   const getVideoThumbnail = (url, customThumbnail) => {
@@ -386,7 +408,7 @@
         return `
           <td style="padding-left:${paddingLeft}; line-height:0; font-size:0;">
             <a href="${item.url || '#'}" style="text-decoration:none; display:inline-block;" target="_blank">
-              ${getSocialIconSvg(item.label, { style: iconStyle, shape: iconShape, size: iconSize, linkColor })}
+              ${getSocialIconImg(item.label, { size: iconSize, shape: iconShape, style: iconStyle, linkColor })}
             </a>
           </td>
         `;
@@ -419,9 +441,19 @@
 
   const renderParagraphBlock = (model) => {
     const align = normalizeAlign(model.get('align') || model.getStyle?.()?.['text-align'], 'left');
+    let text = model.get('paragraphText') || 'Add your supporting copy here. This block is designed for email-safe copy sections and introductory text.';
+    if (model.get('formattingMode') === 'remove') {
+      text = text
+        .replace(/<[^>]+>/g, '')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .trim();
+    }
     const inner = `
       <p style="margin:0; font-size:15px; line-height:inherit; color:inherit; font-family:inherit; text-align:${align}; font-weight:inherit;">
-        ${model.get('paragraphText') || 'Add your supporting copy here. This block is designed for email-safe copy sections and introductory text.'}
+        ${text}
       </p>
     `;
     return renderSectionShell(inner, { background: 'transparent', align, textAlign: align });
@@ -1846,6 +1878,53 @@
         { type: 'site-footer' },
       ],
     },
+    professional: {
+      name: 'Professional',
+      description: 'A clean, modern email with header, hero image, heading, body copy, CTA button, social icons, and footer. Ready for real-world testing.',
+      components: [
+        { type: 'site-header' },
+        {
+          type: 'email-heading',
+          headingText: 'Your headline goes here',
+          headingLevel: 'h1',
+          align: 'center',
+        },
+        {
+          type: 'email-image',
+          imageSrc: 'https://picsum.photos/id/1060/900/700',
+          imageAlt: 'Featured image',
+          imageAlign: 'center',
+          imageWidth: '100%',
+        },
+        {
+          type: 'email-paragraph',
+          paragraphText: 'Add your supporting copy here. This block is designed for email-safe copy sections and introductory text. Replace this with your message.',
+          align: 'left',
+        },
+        {
+          type: 'email-button',
+          buttonText: 'Get Started',
+          align: 'center',
+          buttonColor: '#111827',
+          textColor: '#ffffff',
+        },
+        {
+          type: 'email-social',
+          socialItems: [
+            { label: 'facebook', url: 'https://facebook.com' },
+            { label: 'instagram', url: 'https://instagram.com' },
+            { label: 'x', url: 'https://x.com' },
+            { label: 'linkedin', url: 'https://linkedin.com' },
+          ],
+          align: 'center',
+          iconSize: 32,
+          iconStyle: 'solid-branded',
+          iconShape: 'circle',
+          spacing: 10,
+        },
+        { type: 'site-footer' },
+      ],
+    },
   };
 
   const styleManagerSectors = () => [
@@ -2402,8 +2481,19 @@
           stylable: [...styleGroups.typography, ...styleGroups.layout, ...styleGroups.background],
           paragraphText: 'Add your supporting copy here. This block is designed for email-safe copy sections and introductory text.',
           align: 'left',
+          formattingMode: 'keep',
           traits: [
             textareaTrait('paragraphText', 'Paragraph text'),
+            {
+              type: 'select',
+              name: 'formattingMode',
+              label: 'Formatting',
+              changeProp: true,
+              options: [
+                { id: 'keep', name: 'Keep Formatting' },
+                { id: 'remove', name: 'Remove Formatting' },
+              ],
+            },
             {
               type: 'select',
               name: 'align',
@@ -2420,7 +2510,7 @@
 
         init() {
           syncAlignmentStyle(this, 'align', 'left');
-          bindRenderer(this, ['paragraphText', 'align'], renderParagraphBlock);
+          bindRenderer(this, ['paragraphText', 'align', 'formattingMode'], renderParagraphBlock);
         },
       },
     });
@@ -2595,8 +2685,20 @@
     components.addType('email-table-cell', {
       extend: 'text',
       isComponent(el) {
-        if (el.tagName === 'TD' || el.tagName === 'TH') {
-          return { type: 'email-table-cell' };
+        if (el.tagName !== 'TD' && el.tagName !== 'TH') return false;
+        // Exclude layout columns — they are <td> elements but NOT table cells
+        if (el.classList && el.classList.contains('responsive-td')) return false;
+        if (el.dataset && el.dataset.layoutRole === 'layout-column') return false;
+        // Only match cells that are descendants of an email-table structure
+        let parent = el.parentElement;
+        while (parent) {
+          if (parent.classList && parent.classList.contains('sb-inner-table')) {
+            return { type: 'email-table-cell' };
+          }
+          if (parent.dataset && parent.dataset.gjsType === 'email-table-row') {
+            return { type: 'email-table-cell' };
+          }
+          parent = parent.parentElement;
         }
         return false;
       },

@@ -62,6 +62,7 @@ export const renderBuilderShell = (root) => {
             ${icon.send}
             <span>Send Test Email</span>
           </button>
+          <button id="btn-save-template" class="studio-button studio-button--secondary" type="button">Save Template</button>
           <button id="btn-export" class="studio-button studio-button--primary studio-button--export" type="button">EXPORT</button>
         </div>
       </header>
@@ -349,6 +350,34 @@ export const renderBuilderShell = (root) => {
       </div>
     </div>
 
+    <div id="save-template-modal" class="studio-modal" aria-hidden="true">
+      <div class="studio-modal__dialog studio-modal__dialog--compact">
+        <div class="studio-modal__head">
+          <div>
+            <strong>Save Template</strong>
+            <p>Save the current design as a reusable template.</p>
+          </div>
+          <button class="studio-modal__close" id="btn-close-save-template-modal" type="button">&times;</button>
+        </div>
+        <div class="studio-modal__body studio-modal__body--padded">
+          <form id="save-template-form" class="studio-test-email-form">
+            <label class="studio-test-email-field" for="save-template-name">
+              <span>Template name</span>
+              <input id="save-template-name" type="text" placeholder="e.g. Summer Campaign" autocomplete="off" />
+            </label>
+            <div id="save-template-feedback" class="studio-test-email-feedback" aria-live="polite"></div>
+          </form>
+        </div>
+        <div class="studio-modal__foot">
+          <span></span>
+          <div class="studio-modal__actions">
+            <button id="btn-cancel-save-template" class="studio-button studio-button--secondary" type="button">Cancel</button>
+            <button id="btn-confirm-save-template" class="studio-button studio-button--primary" type="submit" form="save-template-form">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="builder-toast" class="studio-toast" aria-live="polite"></div>
   `;
 
@@ -391,5 +420,10 @@ export const renderBuilderShell = (root) => {
     assetUploadInput: root.querySelector('#asset-upload-input'),
     // Body settings form
     bodySettingsForm: root.querySelector('#body-settings-form'),
+    saveTemplateModal: root.querySelector('#save-template-modal'),
+    saveTemplateForm: root.querySelector('#save-template-form'),
+    saveTemplateInput: root.querySelector('#save-template-name'),
+    saveTemplateFeedback: root.querySelector('#save-template-feedback'),
+    saveTemplateSubmit: root.querySelector('#btn-confirm-save-template'),
   };
 };
