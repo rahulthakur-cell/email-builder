@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "installCommand": "pnpm install",
+  "installCommand": "pnpm install --no-frozen-lockfile",
   "buildCommand": "pnpm --filter grapesjs-cli build && pnpm --filter grapesjs build && cp packages/core/dist/grapes.min.js packages/core/grapes.min.js",
   "outputDirectory": "packages/core",
   "framework": null,
